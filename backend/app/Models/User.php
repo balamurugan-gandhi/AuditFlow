@@ -23,6 +23,12 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'phone',
+        'whatsapp_number',
+        'address',
+        'doj',
+        'dob',
+        'gender',
     ];
 
     /**
@@ -54,5 +60,10 @@ class User extends Authenticatable
     public function clients()
     {
         return $this->belongsToMany(Client::class);
+    }
+
+    public function files()
+    {
+        return $this->hasMany(File::class, 'assigned_to');
     }
 }

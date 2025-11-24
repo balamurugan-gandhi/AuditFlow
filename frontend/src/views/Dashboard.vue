@@ -6,8 +6,13 @@
                 <h2 class="text-3xl font-bold text-surface-900 dark:text-surface-0 m-0">{{ dashboardTitle }}</h2>
                 <p class="text-surface-500 dark:text-surface-400 mt-2">Overview of your audit workflow</p>
             </div>
-            <div class="w-48">
-                <Dropdown v-model="selectedYear" :options="assessmentYears" placeholder="Select Year" class="w-full" @change="fetchDashboardData" />
+            <div class="flex gap-4 w-96">
+                <div v-if="authStore.isAdmin" class="w-1/2">
+                    <Dropdown v-model="selectedEmployee" :options="employees" optionLabel="name" optionValue="id" placeholder="Select Employee" class="w-full" showClear @change="fetchDashboardData" />
+                </div>
+                <div :class="authStore.isAdmin ? 'w-1/2' : 'w-full'">
+                    <Dropdown v-model="selectedYear" :options="assessmentYears" placeholder="Select Year" class="w-full" @change="fetchDashboardData" />
+                </div>
             </div>
         </div>
 
@@ -187,6 +192,13 @@ const loading = ref(false);
 
 const dashboardTitle = computed(() => {
     if (authStore.isAdmin) {
+        if (selectedEmployee.value) {
+            const employee = employees.value.find(e => e.id === selectedEmployee.value);
+            if (employee) {
+                const firstName = employee.name.split(' ')[0];
+                return `${firstName} Dashboard`;
+            }
+        }
         return 'Admin Dashboard';
     }
     const firstName = authStore.user?.name?.split(' ')[0] || 'User';
@@ -200,6 +212,8 @@ const assessmentYears = ref([
     `${currentYear - 2}-${currentYear - 1}`
 ]);
 const selectedYear = ref(assessmentYears.value[0]);
+const employees = ref([]);
+const selectedEmployee = ref(null);
 
 const stats = ref({
     received: 0,
@@ -295,7 +309,10 @@ const fetchDashboardData = async () => {
     try {
         // Fetch stats
         const statsRes = await api.get('/dashboard/stats', {
-            params: { assessment_year: selectedYear.value }
+            params: { 
+                assessment_year: selectedYear.value,
+                employee_id: selectedEmployee.value
+            }
         });
         stats.value = statsRes.data;
 
@@ -310,6 +327,18 @@ const fetchDashboardData = async () => {
         console.error('Error fetching dashboard data:', error);
     } finally {
         loading.value = false;
+    }
+};
+
+const fetchEmployees = async () => {
+    if (!authStore.isAdmin) return;
+    try {
+        const response = await api.get('/employees', {
+            params: { role: 'employee' }
+        });
+        employees.value = response.data;
+    } catch (error) {
+        console.error('Error fetching employees:', error);
     }
 };
 
@@ -341,6 +370,7 @@ const getStatusSeverity = (status) => {
 };
 
 onMounted(() => {
+    fetchEmployees();
     fetchDashboardData();
 });
 </script>

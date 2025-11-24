@@ -41,7 +41,7 @@ class ClientController extends Controller
             'gst_number' => 'nullable|string|max:20',
             'tin_number' => 'nullable|string|max:20',
             'business_type' => 'nullable|string|max:50',
-            'filing_cycle' => 'nullable|string|in:yearly,quarterly,monthly',
+            'filing_cycle' => 'nullable|string|in:Yearly,Quarterly,Monthly',
             'address' => 'nullable|string',
         ]);
 
@@ -60,7 +60,7 @@ class ClientController extends Controller
             'gst_number' => 'nullable|string|max:20',
             'tin_number' => 'nullable|string|max:20',
             'business_type' => 'nullable|string|max:50',
-            'filing_cycle' => 'nullable|string|in:yearly,quarterly,monthly',
+            'filing_cycle' => 'nullable|string|in:Yearly,Quarterly,Monthly',
             'address' => 'nullable|string',
         ]);
 

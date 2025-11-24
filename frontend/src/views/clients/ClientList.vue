@@ -33,8 +33,9 @@
                 <Column header="Actions" :exportable="false" style="min-width: 8rem">
                     <template #body="slotProps">
                         <div class="flex gap-2">
+                            <Button icon="pi pi-eye" text rounded severity="secondary" @click="router.push(`/clients/${slotProps.data.id}`)" v-tooltip.top="'View'" />
                             <Button icon="pi pi-pencil" text rounded severity="info" @click="router.push(`/clients/${slotProps.data.id}/edit`)" v-tooltip.top="'Edit'" />
-                            <Button icon="pi pi-trash" text rounded severity="danger" @click="confirmDelete(slotProps.data)" v-tooltip.top="'Delete'" />
+                            <Button icon="pi pi-trash" text rounded severity="danger" @click="confirmDelete(slotProps.data)" v-tooltip.top="'Delete'" :loading="deletingId === slotProps.data.id" :disabled="deletingId === slotProps.data.id" />
                         </div>
                     </template>
                 </Column>
@@ -61,6 +62,7 @@ const loading = ref(true);
 const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
 });
+const deletingId = ref(null);
 
 const fetchClients = async () => {
     try {
@@ -74,13 +76,19 @@ const fetchClients = async () => {
 };
 
 const confirmDelete = async (client) => {
-    if (confirm(`Are you sure you want to delete ${client.business_name}?`)) {
-        try {
-            await api.delete(`/clients/${client.id}`);
-            await fetchClients();
-        } catch (error) {
-            console.error('Error deleting client:', error);
-        }
+    if (!confirm(`Are you sure you want to delete ${client.business_name}?`)) {
+        return;
+    }
+
+    deletingId.value = client.id;
+
+    try {
+        await api.delete(`/clients/${client.id}`);
+        await fetchClients();
+    } catch (error) {
+        console.error('Error deleting client:', error);
+    } finally {
+        deletingId.value = null;
     }
 };
 

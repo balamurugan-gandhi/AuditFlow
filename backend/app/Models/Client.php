@@ -28,6 +28,11 @@ class Client extends Model
         return $this->belongsToMany(User::class);
     }
 
+    public function files()
+    {
+        return $this->hasMany(File::class);
+    }
+
     /**
      * Scope a query to only include clients assigned to the given user.
      */

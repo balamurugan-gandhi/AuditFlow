@@ -18,9 +18,10 @@ class DashboardController extends Controller
     public function stats(Request $request): JsonResponse
     {
         $assessmentYear = $request->input('assessment_year');
+        $employeeId = $request->input('employee_id');
         $user = $request->user();
 
-        $stats = $this->fileService->getDashboardStats($assessmentYear, $user);
+        $stats = $this->fileService->getDashboardStats($assessmentYear, $user, $employeeId);
 
         return response()->json($stats);
     }

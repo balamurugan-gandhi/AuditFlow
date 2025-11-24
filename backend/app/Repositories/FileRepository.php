@@ -69,13 +69,16 @@ class FileRepository implements FileRepositoryInterface
         return File::with(['client'])->where('assigned_to', $userId)->get();
     }
 
-    public function getStats(?string $assessmentYear, \App\Models\User $user): array
+    public function getStats(?string $assessmentYear, \App\Models\User $user, ?int $employeeId = null): array
     {
         $query = File::query();
 
         // Apply RBAC
         if ($user->hasRole('admin') || $user->hasRole('manager')) {
             // Admins and managers see all files
+            if ($employeeId) {
+                $query->where('assigned_to', $employeeId);
+            }
         } elseif ($user->hasRole('employee')) {
             // Employees see only files assigned to them
             $query->where('assigned_to', $user->id);
@@ -102,6 +105,9 @@ class FileRepository implements FileRepositoryInterface
         if ($user->hasRole('employee')) {
             // For employees, count unique clients from their assigned files
             $totalClients = $files->pluck('client_id')->unique()->count();
+        } elseif ($employeeId && ($user->hasRole('admin') || $user->hasRole('manager'))) {
+             // If filtering by employee, count unique clients from that employee's assigned files
+             $totalClients = $files->pluck('client_id')->unique()->count();
         } elseif (!$user->hasRole('admin') && !$user->hasRole('manager')) {
             $totalClients = \App\Models\Client::whereHas('users', function ($q) use ($user) {
                 $q->where('user_id', $user->id);

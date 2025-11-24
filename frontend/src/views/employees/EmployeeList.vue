@@ -1,12 +1,20 @@
 <template>
     <div class="space-y-6">
         <div class="card bg-white dark:bg-surface-800 rounded-xl shadow-sm p-4">
-            <DataTable :value="employees" :loading="loading" paginator :rows="10" tableStyle="min-width: 50rem"
+            <DataTable v-model:filters="filters" :value="employees" :loading="loading" paginator :rows="10" 
+                       :globalFilterFields="['name', 'email', 'roles.name']"
+                       tableStyle="min-width: 50rem"
                        stripedRows :showGridlines="false" class="p-datatable-sm">
                 <template #header>
                     <div class="flex justify-between items-center">
                         <h3 class="text-lg font-semibold text-surface-900 dark:text-surface-0 m-0">All Employees</h3>
-                        <Button label="Add Employee" icon="pi pi-plus" @click="router.push('/employees/create')" />
+                        <div class="flex gap-2">
+                            <IconField iconPosition="left">
+                                <InputIcon class="pi pi-search" />
+                                <InputText v-model="filters['global'].value" placeholder="Search employees..." />
+                            </IconField>
+                            <Button label="Add Employee" icon="pi pi-plus" @click="router.push('/employees/create')" />
+                        </div>
                     </div>
                 </template>
                 <Column field="name" header="Name" sortable></Column>
@@ -21,6 +29,7 @@
                 <Column header="Actions">
                     <template #body="slotProps">
                         <div class="flex gap-2">
+                            <Button icon="pi pi-eye" text rounded severity="secondary" @click="router.push(`/employees/${slotProps.data.id}`)" v-tooltip.top="'View'" />
                             <Button icon="pi pi-user" text rounded severity="success" v-tooltip="'Login as'" @click="impersonate(slotProps.data)" />
                             <Button icon="pi pi-pencil" text rounded severity="info" @click="router.push(`/employees/${slotProps.data.id}/edit`)" />
                             <Button icon="pi pi-trash" text rounded severity="danger" @click="confirmDelete(slotProps.data)" />
@@ -41,11 +50,18 @@ import Button from 'primevue/button';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Tag from 'primevue/tag';
+import InputText from 'primevue/inputtext';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
+import { FilterMatchMode } from '@primevue/core/api';
 
 const router = useRouter();
 const authStore = useAuthStore();
 const employees = ref([]);
 const loading = ref(true);
+const filters = ref({
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+});
 
 const fetchEmployees = async () => {
     try {

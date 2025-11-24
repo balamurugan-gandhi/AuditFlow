@@ -24,7 +24,7 @@
                     <!-- Basic Info -->
                     <div class="flex flex-col gap-2">
                         <label for="business_name" class="text-sm font-medium text-surface-700 dark:text-surface-200">Business Name *</label>
-                        <InputText id="business_name" v-model="form.business_name" required />
+                        <InputText id="business_name" v-model="form.business_name" :invalid="!!errors.business_name"/>
                     </div>
                     <div class="flex flex-col gap-2">
                         <label for="contact_person" class="text-sm font-medium text-surface-700 dark:text-surface-200">Contact Person</label>
@@ -84,6 +84,13 @@
                 </div>
             </form>
         </div>
+        <div v-if="serverError" class="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
+        >   {{ serverError }}
+        </div>
+        <div v-if="Object.keys(errors).length"
+            class="p-4 bg-red-50 text-red-700 rounded-lg border border-red-200">
+            Please fix the highlighted errors above.
+        </div>
     </div>
 </template>
 
@@ -105,6 +112,8 @@ const fetchingData = ref(!!route.params.id); // Start as true if editing
 
 const businessTypes = ['Proprietorship', 'Partnership', 'LLP', 'Private Limited', 'Public Limited', 'Trust', 'Society', 'Other'];
 const filingCycles = ['Monthly', 'Quarterly', 'Yearly'];
+const errors = ref({});
+const serverError = ref("");
 
 const form = ref({
     business_name: '',
@@ -138,16 +147,52 @@ const fetchClient = async () => {
 
 const handleSubmit = async () => {
     loading.value = true;
+    errors.value = {};
+    serverError.value = "";
+
     try {
+        let response;
+
         if (isEditing.value) {
-            await api.put(`/clients/${route.params.id}`, form.value);
+            response = await api.put(`/clients/${route.params.id}`, form.value);
         } else {
-            await api.post('/clients', form.value);
+            response = await api.post('/clients', form.value);
         }
+
         router.push('/clients');
+
     } catch (error) {
-        console.error('Error saving client:', error);
-    } finally {
+        console.error("API Error:", error);
+
+        // --- Laravel 422 Validation Errors ---
+        if (error.response?.status === 422) {
+            errors.value = error.response.data.errors || {};
+            return;
+        }
+
+        // --- Laravel 500 Server Errors ---
+        if (error.response?.status === 500) {
+            serverError.value = `Internal server error. Please try again later. ${error.response?.data?.message}`;
+            return;
+        }
+
+        // --- Unauthorized / Forbidden ---
+        if (error.response?.status === 403 || error.response?.status === 401) {
+            serverError.value = "You are not authorized to perform this action.";
+            return;
+        }
+
+        // --- Network Failure ---
+        if (!error.response) {
+            serverError.value = "Network error — please check your internet connection.";
+            return;
+        }
+
+        // --- Other unexpected cases ---
+        serverError.value = error.response.data.message || "Unexpected error occurred.";
+    }
+
+    finally {
         loading.value = false;
     }
 };

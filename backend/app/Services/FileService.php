@@ -48,8 +48,8 @@ class FileService
         return $this->fileRepository->getByEmployee($userId);
     }
 
-    public function getDashboardStats(?string $assessmentYear, \App\Models\User $user): array
+    public function getDashboardStats(?string $assessmentYear, \App\Models\User $user, ?int $employeeId = null): array
     {
-        return $this->fileRepository->getStats($assessmentYear, $user);
+        return $this->fileRepository->getStats($assessmentYear, $user, $employeeId);
     }
 }

@@ -14,5 +14,5 @@ interface FileRepositoryInterface
     public function update(int $id, array $data): bool;
     public function delete(int $id): bool;
     public function getByEmployee(int $userId): Collection;
-    public function getStats(?string $assessmentYear, \App\Models\User $user): array;
+    public function getStats(?string $assessmentYear, \App\Models\User $user, ?int $employeeId = null): array;
 }

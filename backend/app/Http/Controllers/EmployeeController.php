@@ -10,11 +10,17 @@ use Spatie\Permission\Models\Role;
 
 class EmployeeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Get all users with 'employee' or 'manager' role
-        $employees = User::role(['employee', 'manager'])->with('roles')->get();
-        return response()->json($employees);
+        $query = User::with('roles');
+
+        if ($request->has('role')) {
+            $query->role($request->role);
+        } else {
+            $query->role(['employee', 'manager']);
+        }
+
+        return response()->json($query->get());
     }
 
     public function store(Request $request)
@@ -26,12 +32,24 @@ class EmployeeController extends Controller
             'role' => ['required', Rule::in(['manager', 'employee'])],
             'clients' => 'nullable|array',
             'clients.*' => 'exists:clients,id',
+            'phone' => 'nullable|string|max:20',
+            'whatsapp_number' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
+            'doj' => 'nullable|date',
+            'dob' => 'nullable|date',
+            'gender' => 'nullable|string|max:20',
         ]);
 
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
+            'phone' => $validated['phone'] ?? null,
+            'whatsapp_number' => $validated['whatsapp_number'] ?? null,
+            'address' => $validated['address'] ?? null,
+            'doj' => $validated['doj'] ?? null,
+            'dob' => $validated['dob'] ?? null,
+            'gender' => $validated['gender'] ?? null,
         ]);
 
         $user->assignRole($validated['role']);
@@ -45,7 +63,7 @@ class EmployeeController extends Controller
 
     public function show(int $id)
     {
-        $user = User::with(['roles', 'clients'])->find($id);
+        $user = User::with(['roles', 'clients', 'files.client'])->find($id);
         if (!$user) {
             return response()->json(['message' => 'Employee not found'], 404);
         }
@@ -66,6 +84,12 @@ class EmployeeController extends Controller
             'role' => ['nullable', Rule::in(['manager', 'employee'])],
             'clients' => 'nullable|array',
             'clients.*' => 'exists:clients,id',
+            'phone' => 'nullable|string|max:20',
+            'whatsapp_number' => 'nullable|string|max:20',
+            'address' => 'nullable|string',
+            'doj' => 'nullable|date',
+            'dob' => 'nullable|date',
+            'gender' => 'nullable|string|max:20',
         ]);
 
         if (isset($validated['password'])) {

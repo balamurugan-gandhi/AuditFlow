@@ -39,6 +39,12 @@ const routes = [
                 meta: { title: 'Edit Client', requiresAdminOrManager: true }
             },
             {
+                path: 'clients/:id',
+                name: 'ClientDetails',
+                component: () => import('../views/clients/ClientDetails.vue'),
+                meta: { title: 'Client Details', requiresAdminOrManager: true }
+            },
+            {
                 path: 'employees',
                 name: 'EmployeeList',
                 component: () => import('../views/employees/EmployeeList.vue'),
@@ -55,6 +61,12 @@ const routes = [
                 name: 'EmployeeEdit',
                 component: () => import('../views/employees/EmployeeForm.vue'),
                 meta: { title: 'Edit Employee', requiresAdminOrManager: true }
+            },
+            {
+                path: 'employees/:id',
+                name: 'EmployeeDetails',
+                component: () => import('../views/employees/EmployeeDetails.vue'),
+                meta: { title: 'Employee Details', requiresAdminOrManager: true }
             },
             {
                 path: 'files',

@@ -10,17 +10,17 @@ class ClientRepository implements ClientRepositoryInterface
 {
     public function all(): Collection
     {
-        return Client::all();
+        return Client::orderBy('created_at', 'desc')->get();
     }
 
     public function allForUser(\App\Models\User $user): Collection
     {
-        return Client::forUser($user)->get();
+        return Client::forUser($user)->orderBy('created_at', 'desc')->get();
     }
 
     public function find(int $id): ?Client
     {
-        return Client::find($id);
+        return Client::with(['files.assignee'])->find($id);
     }
 
     public function create(array $data): Client
