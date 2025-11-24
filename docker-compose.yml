@@ -1,0 +1,135 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: auditflow-app
+    container_name: auditflow-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./backend:/var/www/html
+    networks:
+      - auditflow-network
+    depends_on:
+      - db
+      - redis
+
+  nginx:
+    image: nginx:alpine
+    container_name: auditflow-nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      - ./backend:/var/www/html
+      - ./nginx/conf.d:/etc/nginx/conf.d
+    networks:
+      - auditflow-network
+    depends_on:
+      - app
+
+  db:
+    image: mysql:8.0
+    container_name: auditflow-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-auditflow}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_USER: ${DB_USERNAME:-auditflow}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - auditflow-network
+    ports:
+      - "3307:3306"
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: auditflow-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: ${DB_USERNAME:-auditflow}
+      PMA_PASSWORD: ${DB_PASSWORD:-secret}
+    ports:
+      - "8081:80"
+    networks:
+      - auditflow-network
+    depends_on:
+      - db
+
+  redis:
+    image: redis:alpine
+    container_name: auditflow-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - auditflow-network
+    ports:
+      - "6380:6379"
+
+  worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: auditflow-app
+    container_name: auditflow-worker
+    restart: unless-stopped
+    working_dir: /var/www/html
+    command: php artisan queue:work
+    volumes:
+      - ./backend:/var/www/html
+    networks:
+      - auditflow-network
+    depends_on:
+      - app
+      - db
+      - redis
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: auditflow-app
+    container_name: auditflow-scheduler
+    restart: unless-stopped
+    working_dir: /var/www/html
+    command: php artisan schedule:work
+    volumes:
+      - ./backend:/var/www/html
+    networks:
+      - auditflow-network
+    depends_on:
+      - app
+      - db
+      - redis
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    image: auditflow-frontend
+    container_name: auditflow-frontend
+    restart: unless-stopped
+    ports:
+      - "5174:5173"
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    networks:
+      - auditflow-network
+
+networks:
+  auditflow-network:
+    driver: bridge
+
+volumes:
+  db_data:
+  redis_data:
+  frontend_node_modules:

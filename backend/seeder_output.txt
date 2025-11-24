@@ -1,0 +1,28 @@
+
+   INFO  Seeding database.  
+
+
+   Illuminate\Database\UniqueConstraintViolationException 
+
+  SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'INV-2025-1000' for key 'invoices.invoices_invoice_number_unique' (Connection: mysql, SQL: insert into `invoices` (`client_id`, `invoice_number`, `invoice_date`, `due_date`, `total_amount`, `tax_amount`, `status`, `notes`, `updated_at`, `created_at`) values (293, INV-2025-1000, 2025-06-29, 2025-07-29, 35904, 6462.72, paid, Payment received and verified, 2025-11-23 14:02:46, 2025-11-23 14:02:46))
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:819
+    815▕         // message to include the bindings with SQL, which will make this exception a
+    816▕         // lot more helpful to the developer instead of just the database's errors.
+    817▕         catch (Exception $e) {
+    818▕             if ($this->isUniqueConstraintError($e)) {
+  ➜ 819▕                 throw new UniqueConstraintViolationException(
+    820▕                     $this->getName(), $query, $this->prepareBindings($bindings), $e
+    821▕                 );
+    822▕             }
+    823▕
+
+      [2m+17 vendor frames [22m
+
+  18  database/seeders/InvoiceSeeder.php:38
+      Illuminate\Database\Eloquent\Model::__callStatic("create")
+      [2m+23 vendor frames [22m
+
+  42  artisan:16
+      Illuminate\Foundation\Application::handleCommand(Object(Symfony\Component\Console\Input\ArgvInput))
+
