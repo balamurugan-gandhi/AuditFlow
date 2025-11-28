@@ -2,7 +2,8 @@ import axios from 'axios';
 import router from '../router';
 
 const api = axios.create({
-    baseURL: 'http://localhost:8080/api',
+    //baseURL: 'http://192.168.1.41:8080/api',
+    baseURL: import.meta.env.VITE_API_URL,
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
