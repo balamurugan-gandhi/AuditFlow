@@ -27,9 +27,10 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www/html
 
-# Create system user to run Composer and Artisan Commands
 RUN useradd -G www-data,root -u 1000 -d /home/dev dev
-RUN mkdir -p /home/dev/.composer && \
-    chown -R dev:dev /home/dev
+RUN mkdir -p /home/dev/.composer \
+    && chown -R dev:dev /home/dev \
+    && mkdir -p /var/www/html/vendor /var/www/html/storage \
+    && chown -R dev:www-data /var/www/html
 
 USER dev
