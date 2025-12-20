@@ -96,18 +96,27 @@ class FileRepository implements FileRepositoryInterface
             $query->where('assessment_year', $assessmentYear);
         }
 
-        $files = $query->get();
+        // Use conditional aggregation for performance
+        $stats = $query->toBase()->selectRaw("
+            count(*) as total,
+            sum(case when status in ('received', 'pending-info') then 1 else 0 end) as pending,
+            sum(case when status in ('assigned', 'in-progress') then 1 else 0 end) as in_progress,
+            sum(case when status = 'ready-to-file' then 1 else 0 end) as ready_to_file,
+            sum(case when status in ('completed', 'filed') then 1 else 0 end) as completed,
+            sum(case when payment_id is not null then 1 else 0 end) as payment_received
+        ")->first();
         
-        // Total files submitted
-        $totalFiles = $files->count();
-        
-        // Get total clients count for percentage calculation
+        // Get total clients count
+        $totalClients = 0;
         if ($user->hasRole('employee')) {
             // For employees, count unique clients from their assigned files
-            $totalClients = $files->pluck('client_id')->unique()->count();
+            // We can reuse the query conditions but we need a fresh query builder or clone
+            $clientQuery = clone $query;
+            $totalClients = $clientQuery->distinct('client_id')->count('client_id');
         } elseif ($employeeId && ($user->hasRole('admin') || $user->hasRole('manager'))) {
              // If filtering by employee, count unique clients from that employee's assigned files
-             $totalClients = $files->pluck('client_id')->unique()->count();
+             $clientQuery = clone $query;
+             $totalClients = $clientQuery->distinct('client_id')->count('client_id');
         } elseif (!$user->hasRole('admin') && !$user->hasRole('manager')) {
             $totalClients = \App\Models\Client::whereHas('users', function ($q) use ($user) {
                 $q->where('user_id', $user->id);
@@ -117,14 +126,14 @@ class FileRepository implements FileRepositoryInterface
         }
 
         return [
-            'received' => $totalFiles,  // Total files received
-            'total_clients' => $totalClients,  // Total clients for reference
-            'total_files' => $totalFiles,  // Same as received
-            'pending' => $files->whereIn('status', ['received', 'pending-info'])->count(),  // Unassigned + Pending Info
-            'in_progress' => $files->whereIn('status', ['assigned', 'in-progress'])->count(),  // Assigned + In Progress
-            'ready_to_file' => $files->where('status', 'ready-to-file')->count(),
-            'completed' => $files->whereIn('status', ['completed', 'filed'])->count(),  // Completed + Filed
-            'payment_received' => $files->whereNotNull('payment_id')->count(),
+            'received' => $stats->total ?? 0,
+            'total_clients' => $totalClients,
+            'total_files' => $stats->total ?? 0,
+            'pending' => $stats->pending ?? 0,
+            'in_progress' => $stats->in_progress ?? 0,
+            'ready_to_file' => $stats->ready_to_file ?? 0,
+            'completed' => $stats->completed ?? 0,
+            'payment_received' => $stats->payment_received ?? 0,
         ];
     }
 
