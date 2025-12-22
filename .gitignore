@@ -57,3 +57,8 @@ coverage/
 tmp/
 temp/
 *.tmp
+
+# Allow files/tmp directory (but ignore its contents)
+!files/tmp/
+files/tmp/*
+!.gitkeep
