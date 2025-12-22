@@ -71,6 +71,7 @@ class ClientController extends Controller
 
         $validated = $request->validate([
             'business_name' => 'required|string|max:255',
+            'file_id' => 'required|numeric',
             'contact_person' => 'nullable|string|max:255',
             'email' => 'nullable|email|unique:clients,email',
             'phone' => 'nullable|string|max:20',
@@ -137,6 +138,7 @@ class ClientController extends Controller
         $validated = $request->validate([
             'business_name' => 'sometimes|string|max:255',
             'contact_person' => 'nullable|string|max:255',
+            'file_id' => 'required|numeric',
             'email' => 'nullable|email|unique:clients,email,' . $id,
             'phone' => 'nullable|string|max:20',
             'alternate_phone' => 'nullable|string|max:20',

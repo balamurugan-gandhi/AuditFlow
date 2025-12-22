@@ -28,6 +28,11 @@
                         <small class="text-red-500" v-if="errors.business_name">{{ errors.business_name[0] }}</small>
                     </div>
                     <div class="flex flex-col gap-2">
+                        <label for="file_id" class="text-sm font-medium text-surface-700 dark:text-surface-200">File ID</label>
+                        <InputText id="file_id" v-model="form.file_id" :invalid="!!errors.file_id" />
+                        <small class="text-red-500" v-if="errors.file_id">{{ errors.file_id[0] }}</small>
+                    </div>
+                    <div class="flex flex-col gap-2">
                         <label for="contact_person" class="text-sm font-medium text-surface-700 dark:text-surface-200">Contact Person</label>
                         <InputText id="contact_person" v-model="form.contact_person" :invalid="!!errors.contact_person" />
                         <small class="text-red-500" v-if="errors.contact_person">{{ errors.contact_person[0] }}</small>
@@ -36,8 +41,7 @@
                         <label for="business_type" class="text-sm font-medium text-surface-700 dark:text-surface-200">Business Type</label>
                         <Dropdown id="business_type" v-model="form.business_type" :options="businessTypes" placeholder="Select Type" :invalid="!!errors.business_type" />
                         <small class="text-red-500" v-if="errors.business_type">{{ errors.business_type[0] }}</small>
-                    </div>
-
+                    </div>                    
                     <!-- Contact Info -->
                     <div class="flex flex-col gap-2">
                         <label for="email" class="text-sm font-medium text-surface-700 dark:text-surface-200">Email</label>
@@ -130,6 +134,7 @@ const serverError = ref("");
 const form = ref({
     business_name: '',
     contact_person: '',
+    file_id:'',
     email: '',
     phone: '',
     alternate_phone: '',

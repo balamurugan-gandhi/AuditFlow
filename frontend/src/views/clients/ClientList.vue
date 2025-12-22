@@ -24,9 +24,9 @@
                 <Column field="pan_number" header="PAN Number" sortable></Column>
                 <Column field="contact_person" header="Contact Person" sortable></Column>
                 <Column field="phone" header="Phone"></Column>
-                <Column field="email" header="Email" sortable>
+                <Column field="email" header="File ID" sortable>
                     <template #body="slotProps">
-                        <span v-if="slotProps.data.email">{{ slotProps.data.email }}</span>
+                        <span v-if="slotProps.data.file_id">{{ slotProps.data.file_id }}</span>
                         <span v-else class="text-surface-400 italic">N/A</span>
                     </template>
                 </Column>
