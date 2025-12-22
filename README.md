@@ -134,7 +134,7 @@ After setting up the project and running `docker-compose up -d` on the new machi
 Get-Content backup_db.sql | docker exec -i auditflow-db mysql -u auditflow -psecret auditflow
 
 # For Git Bash / Linux users:
-cat backup_db.sql | docker exec -i auditflow-db mysql -u auditflow -psecret auditflow
+docker exec auditflow-db mysqldump -u auditflow -psecret --no-tablespaces auditflow > backup_db.sql
 ```
 
 **2. Restore Uploaded Files**

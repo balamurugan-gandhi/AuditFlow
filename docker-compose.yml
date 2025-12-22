@@ -55,6 +55,8 @@ services:
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: auditflow-phpmyadmin
+    profiles:
+    - tools
     restart: unless-stopped
     environment:
       PMA_HOST: db
