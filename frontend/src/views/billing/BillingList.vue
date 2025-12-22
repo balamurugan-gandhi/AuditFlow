@@ -1,14 +1,19 @@
 <template>
     <div class="space-y-6">
+        <div class="flex justify-between items-center gap-4">
+            <h2 class="text-2xl font-bold text-surface-900 dark:text-surface-0 m-0">All Invoices</h2>
+            <div class="flex gap-3">
+                <IconField iconPosition="left">
+                    <InputIcon class="pi pi-search" />
+                    <InputText v-model="searchQuery" placeholder="Search invoices..." style="width: 300px;" />
+                </IconField>
+                <Button label="Create Invoice" icon="pi pi-plus" @click="router.push('/billing/create')" />
+            </div>
+        </div>
+
         <div class="card bg-white dark:bg-surface-800 rounded-xl shadow-sm p-4">
-            <DataTable :value="invoices" :loading="loading" paginator :rows="10" tableStyle="min-width: 50rem"
+            <DataTable :value="filteredInvoices" :loading="loading" paginator :rows="10" tableStyle="min-width: 50rem"
                        stripedRows :showGridlines="false" class="p-datatable-sm">
-                <template #header>
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-lg font-semibold text-surface-900 dark:text-surface-0 m-0">All Invoices</h3>
-                        <Button label="Create Invoice" icon="pi pi-plus" @click="router.push('/billing/create')" />
-                    </div>
-                </template>
                 <Column field="invoice_number" header="Invoice #" sortable></Column>
                 <Column field="client.business_name" header="Client" sortable></Column>
                 <Column field="invoice_date" header="Date" sortable></Column>
@@ -46,7 +51,7 @@
 
                 <div class="flex flex-col gap-2">
                     <label for="amount" class="text-sm font-medium">Amount</label>
-                    <InputNumber id="amount" v-model="paymentForm.amount" mode="currency" currency="USD" locale="en-US" class="w-full" />
+                    <InputNumber id="amount" v-model="paymentForm.amount" mode="currency" currency="INR" locale="en-IN" class="w-full" />
                 </div>
                 <div class="flex flex-col gap-2">
                     <label for="date" class="text-sm font-medium">Date</label>
@@ -66,7 +71,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../../api/axios';
 import Button from 'primevue/button';
@@ -78,11 +83,14 @@ import InputNumber from 'primevue/inputnumber';
 import InputText from 'primevue/inputtext';
 import Dropdown from 'primevue/dropdown';
 import Tooltip from 'primevue/tooltip';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
 
 const vTooltip = Tooltip;
 const router = useRouter();
 const invoices = ref([]);
 const loading = ref(true);
+const searchQuery = ref('');
 
 // Payment State
 const showPaymentDialog = ref(false);
@@ -93,6 +101,21 @@ const paymentForm = ref({
     amount: 0,
     payment_date: new Date().toISOString().split('T')[0],
     payment_method: ''
+});
+
+const filteredInvoices = computed(() => {
+    if (!searchQuery.value) {
+        return invoices.value;
+    }
+    
+    const query = searchQuery.value.toLowerCase();
+    return invoices.value.filter(invoice => {
+        return (
+            invoice.invoice_number?.toLowerCase().includes(query) ||
+            invoice.client?.business_name?.toLowerCase().includes(query) ||
+            invoice.status?.toLowerCase().includes(query)
+        );
+    });
 });
 
 const fetchInvoices = async () => {
@@ -130,8 +153,7 @@ const submitPayment = async () => {
 };
 
 const viewInvoice = (invoice) => {
-    // Implement view details if needed, for now just log
-    console.log('View invoice', invoice);
+    router.push(`/billing/${invoice.id}`);
 };
 
 const getStatusSeverity = (status) => {
@@ -144,7 +166,7 @@ const getStatusSeverity = (status) => {
 };
 
 const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
+    return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(value);
 };
 
 onMounted(() => {

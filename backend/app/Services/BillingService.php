@@ -26,13 +26,19 @@ class BillingService
     {
         $invoice = $this->invoiceRepository->create($data);
         $invoice->refresh();
-        
-        // Notify admin (for demo purposes, assuming first user is admin)
+
+        // Notify client
+        $client = $invoice->client;
+        if ($client) {
+            $client->notify(new \App\Notifications\InvoiceGenerated($invoice));
+        }
+
+        // Notify admin (for demo purposes)
         $admin = \App\Models\User::role('admin')->first();
         if ($admin) {
-            $admin->notify(new \App\Notifications\InvoiceGenerated($invoice));
+            // $admin->notify(new \App\Notifications\InvoiceGenerated($invoice));
         }
-        
+
         return $invoice;
     }
 
@@ -51,12 +57,6 @@ class BillingService
         if ($user->hasRole('admin') || $user->hasRole('manager')) {
             return $this->invoiceRepository->all();
         }
-
-        // Assuming InvoiceRepository has a way to filter or we do it here if it returns a query builder
-        // But InvoiceRepository::all() returns Collection.
-        // Let's add allForUser to InvoiceRepositoryInterface if possible, or filter here.
-        // For now, let's assume we need to add it to repository.
-        // Actually, let's check InvoiceRepository first.
         return $this->invoiceRepository->allForUser($user);
     }
 
@@ -69,7 +69,7 @@ class BillingService
             // Update invoice status
             $invoice = $this->invoiceRepository->find($invoiceId);
             $totalPaid = $invoice->payments->sum('amount');
-            $totalDue = $invoice->total_amount + $invoice->tax_amount;
+            $totalDue = $invoice->total_amount; // total_amount already includes tax
 
             if ($totalPaid >= $totalDue) {
                 $this->invoiceRepository->update($invoiceId, ['status' => 'paid']);
@@ -77,10 +77,16 @@ class BillingService
                 $this->invoiceRepository->update($invoiceId, ['status' => 'partial']);
             }
 
+            // Notify client
+            $client = $invoice->client;
+            if ($client) {
+                $client->notify(new \App\Notifications\PaymentReceived($payment, $invoice));
+            }
+
             // Notify admin
             $admin = \App\Models\User::role('admin')->first();
             if ($admin) {
-                $admin->notify(new \App\Notifications\PaymentReceived($payment, $invoice));
+                //$admin->notify(new \App\Notifications\PaymentReceived($payment, $invoice));
             }
 
             return $payment;

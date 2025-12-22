@@ -30,7 +30,24 @@ class PaymentReceived extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return ['database', \App\Notifications\Channels\WhatsAppChannel::class];
+    }
+
+    public function toWhatsApp($notifiable)
+    {
+        return [
+            'name' => 'payment_received', // Template name
+            'language' => ['code' => 'en_US'],
+            'components' => [
+                [
+                    'type' => 'body',
+                    'parameters' => [
+                        ['type' => 'text', 'text' => number_format($this->payment->amount, 2)],
+                        ['type' => 'text', 'text' => $this->invoice->invoice_number],
+                    ]
+                ]
+            ]
+        ];
     }
 
     /**

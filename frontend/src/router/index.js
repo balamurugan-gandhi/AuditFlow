@@ -105,6 +105,12 @@ const routes = [
                 meta: { title: 'Create Invoice' }
             },
             {
+                path: 'billing/:id',
+                name: 'InvoiceDetails',
+                component: () => import('../views/billing/InvoiceDetails.vue'),
+                meta: { title: 'Invoice Details' }
+            },
+            {
                 path: 'work-logs',
                 name: 'WorkLogList',
                 component: () => import('../views/worklogs/WorkLogList.vue'),

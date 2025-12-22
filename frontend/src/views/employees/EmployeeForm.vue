@@ -12,52 +12,61 @@
                 </div>
             </div>
 
-            <!-- Actual Form -->
             <form v-else @submit.prevent="handleSubmit" class="space-y-6">
                 <div class="grid grid-cols-1 gap-6">
                     <div class="flex flex-col gap-2">
                         <label for="name" class="text-sm font-medium text-surface-700 dark:text-surface-200">Name</label>
-                        <InputText id="name" v-model="form.name" required />
+                        <InputText id="name" v-model="form.name" :invalid="!!errors.name" required />
+                        <small class="text-red-500" v-if="errors.name">{{ errors.name[0] }}</small>
                     </div>
                     <div class="flex flex-col gap-2">
                         <label for="email" class="text-sm font-medium text-surface-700 dark:text-surface-200">Email</label>
-                        <InputText id="email" v-model="form.email" type="email" required />
+                        <InputText id="email" v-model="form.email" type="email" :invalid="!!errors.email" required />
+                        <small class="text-red-500" v-if="errors.email">{{ errors.email[0] }}</small>
                     </div>
                     <div class="flex flex-col gap-2" v-if="!isEditing">
                         <label for="password" class="text-sm font-medium text-surface-700 dark:text-surface-200">Password</label>
-                        <Password id="password" v-model="form.password" :feedback="false" toggleMask required />
+                        <Password id="password" v-model="form.password" :feedback="false" toggleMask :invalid="!!errors.password" required />
+                        <small class="text-red-500" v-if="errors.password">{{ errors.password[0] }}</small>
                     </div>
                     <div class="flex flex-col gap-2">
                         <label for="role" class="text-sm font-medium text-surface-700 dark:text-surface-200">Role</label>
-                        <Dropdown id="role" v-model="form.role" :options="roles" optionLabel="name" optionValue="name" placeholder="Select a Role" class="w-full" />
+                        <Dropdown id="role" v-model="form.role" :options="roles" optionLabel="name" optionValue="name" placeholder="Select a Role" class="w-full" :invalid="!!errors.role" />
+                        <small class="text-red-500" v-if="errors.role">{{ errors.role[0] }}</small>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div class="flex flex-col gap-2">
                             <label for="phone" class="text-sm font-medium text-surface-700 dark:text-surface-200">Phone</label>
-                            <InputText id="phone" v-model="form.phone" />
+                            <InputText id="phone" v-model="form.phone" :invalid="!!errors.phone" />
+                            <small class="text-red-500" v-if="errors.phone">{{ errors.phone[0] }}</small>
                         </div>
                         <div class="flex flex-col gap-2">
                             <label for="whatsapp_number" class="text-sm font-medium text-surface-700 dark:text-surface-200">WhatsApp Number</label>
-                            <InputText id="whatsapp_number" v-model="form.whatsapp_number" />
+                            <InputText id="whatsapp_number" v-model="form.whatsapp_number" :invalid="!!errors.whatsapp_number" />
+                            <small class="text-red-500" v-if="errors.whatsapp_number">{{ errors.whatsapp_number[0] }}</small>
                         </div>
                         <div class="flex flex-col gap-2">
                             <label for="dob" class="text-sm font-medium text-surface-700 dark:text-surface-200">Date of Birth</label>
-                            <Calendar id="dob" v-model="form.dob" dateFormat="yy-mm-dd" showIcon />
+                            <Calendar id="dob" v-model="form.dob" dateFormat="yy-mm-dd" showIcon :invalid="!!errors.dob" />
+                            <small class="text-red-500" v-if="errors.dob">{{ errors.dob[0] }}</small>
                         </div>
                         <div class="flex flex-col gap-2">
                             <label for="gender" class="text-sm font-medium text-surface-700 dark:text-surface-200">Gender</label>
-                            <Dropdown id="gender" v-model="form.gender" :options="['Male', 'Female', 'Other']" placeholder="Select Gender" class="w-full" />
+                            <Dropdown id="gender" v-model="form.gender" :options="['Male', 'Female', 'Other']" placeholder="Select Gender" class="w-full" :invalid="!!errors.gender" />
+                            <small class="text-red-500" v-if="errors.gender">{{ errors.gender[0] }}</small>
                         </div>
                         <div class="flex flex-col gap-2">
                             <label for="doj" class="text-sm font-medium text-surface-700 dark:text-surface-200">Date of Joining</label>
-                            <Calendar id="doj" v-model="form.doj" dateFormat="yy-mm-dd" showIcon />
+                            <Calendar id="doj" v-model="form.doj" dateFormat="yy-mm-dd" showIcon :invalid="!!errors.doj" />
+                            <small class="text-red-500" v-if="errors.doj">{{ errors.doj[0] }}</small>
                         </div>
                     </div>
 
                     <div class="flex flex-col gap-2">
                         <label for="address" class="text-sm font-medium text-surface-700 dark:text-surface-200">Address</label>
-                        <Textarea id="address" v-model="form.address" rows="3" autoResize />
+                        <Textarea id="address" v-model="form.address" rows="3" autoResize :invalid="!!errors.address" />
+                        <small class="text-red-500" v-if="errors.address">{{ errors.address[0] }}</small>
                     </div>
                     
                     <!-- Client Assignment (Disabled) -->
@@ -150,6 +159,8 @@ const form = ref({
     gender: ''
 });
 
+const errors = ref({});
+
 const assignedClientObjects = computed(() => {
     return clients.value.filter(c => form.value.clients.includes(c.id));
 });
@@ -217,6 +228,7 @@ const formatDateForApi = (date) => {
 
 const handleSubmit = async () => {
     loading.value = true;
+    errors.value = {};
     try {
         if (isEditing.value) {
             await api.put(`/employees/${route.params.id}`, {
@@ -241,6 +253,9 @@ const handleSubmit = async () => {
         router.push('/employees');
     } catch (error) {
         console.error('Error saving employee:', error);
+        if (error.response?.status === 422) {
+            errors.value = error.response.data.errors || {};
+        }
     } finally {
         loading.value = false;
     }

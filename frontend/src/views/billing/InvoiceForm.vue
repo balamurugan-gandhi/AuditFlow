@@ -6,31 +6,38 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="flex flex-col gap-2">
                         <label for="client" class="text-sm font-medium text-surface-700 dark:text-surface-200">Client</label>
-                        <Dropdown id="client" v-model="form.client_id" :options="clients" optionLabel="business_name" optionValue="id" placeholder="Select Client" filter required class="w-full" />
+                        <Dropdown id="client" v-model="form.client_id" :options="clients" optionLabel="business_name" optionValue="id" placeholder="Select Client" filter required class="w-full" :invalid="!!errors.client_id" />
+                        <small class="text-red-500" v-if="errors.client_id">{{ errors.client_id[0] }}</small>
                     </div>
                     <div class="flex flex-col gap-2">
                         <label for="invoice_number" class="text-sm font-medium text-surface-700 dark:text-surface-200">Invoice #</label>
-                        <InputText id="invoice_number" v-model="form.invoice_number" required />
+                        <InputText id="invoice_number" v-model="form.invoice_number" required :invalid="!!errors.invoice_number" />
+                        <small class="text-red-500" v-if="errors.invoice_number">{{ errors.invoice_number[0] }}</small>
                     </div>
                     <div class="flex flex-col gap-2">
                         <label for="invoice_date" class="text-sm font-medium text-surface-700 dark:text-surface-200">Invoice Date</label>
-                        <InputText id="invoice_date" type="date" v-model="form.invoice_date" required />
+                        <InputText id="invoice_date" type="date" v-model="form.invoice_date" required :invalid="!!errors.invoice_date" />
+                        <small class="text-red-500" v-if="errors.invoice_date">{{ errors.invoice_date[0] }}</small>
                     </div>
                     <div class="flex flex-col gap-2">
                         <label for="due_date" class="text-sm font-medium text-surface-700 dark:text-surface-200">Due Date</label>
-                        <InputText id="due_date" type="date" v-model="form.due_date" required />
+                        <InputText id="due_date" type="date" v-model="form.due_date" required :invalid="!!errors.due_date" />
+                        <small class="text-red-500" v-if="errors.due_date">{{ errors.due_date[0] }}</small>
                     </div>
                     <div class="flex flex-col gap-2">
                         <label for="amount" class="text-sm font-medium text-surface-700 dark:text-surface-200">Total Amount</label>
-                        <InputNumber id="amount" v-model="form.total_amount" mode="currency" currency="USD" locale="en-US" required class="w-full" />
+                        <InputNumber id="amount" v-model="form.total_amount" mode="currency" currency="INR" locale="en-IN" required class="w-full" :invalid="!!errors.total_amount" />
+                        <small class="text-red-500" v-if="errors.total_amount">{{ errors.total_amount[0] }}</small>
                     </div>
                     <div class="flex flex-col gap-2">
                         <label for="tax" class="text-sm font-medium text-surface-700 dark:text-surface-200">Tax Amount</label>
-                        <InputNumber id="tax" v-model="form.tax_amount" mode="currency" currency="USD" locale="en-US" class="w-full" />
+                        <InputNumber id="tax" v-model="form.tax_amount" mode="currency" currency="INR" locale="en-IN" class="w-full" :invalid="!!errors.tax_amount" />
+                        <small class="text-red-500" v-if="errors.tax_amount">{{ errors.tax_amount[0] }}</small>
                     </div>
                     <div class="flex flex-col gap-2 md:col-span-2">
                         <label for="notes" class="text-sm font-medium text-surface-700 dark:text-surface-200">Notes</label>
-                        <Textarea id="notes" v-model="form.notes" rows="3" />
+                        <Textarea id="notes" v-model="form.notes" rows="3" :invalid="!!errors.notes" />
+                        <small class="text-red-500" v-if="errors.notes">{{ errors.notes[0] }}</small>
                     </div>
                 </div>
 
@@ -67,6 +74,8 @@ const form = ref({
     notes: ''
 });
 
+const errors = ref({});
+
 const fetchClients = async () => {
     try {
         const response = await api.get('/clients');
@@ -78,11 +87,15 @@ const fetchClients = async () => {
 
 const handleSubmit = async () => {
     loading.value = true;
+    errors.value = {};
     try {
         await api.post('/invoices', form.value);
         router.push('/billing');
     } catch (error) {
         console.error('Error creating invoice:', error);
+        if (error.response?.status === 422) {
+            errors.value = error.response.data.errors || {};
+        }
     } finally {
         loading.value = false;
     }

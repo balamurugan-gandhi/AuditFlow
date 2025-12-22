@@ -1,14 +1,20 @@
 <template>
+    <ConfirmDialog />
     <div class="space-y-6">
+        <div class="flex justify-between items-center gap-4">
+            <h2 class="text-2xl font-bold text-surface-900 dark:text-surface-0 m-0">All Files</h2>
+            <div class="flex gap-3">
+                <IconField iconPosition="left">
+                    <InputIcon class="pi pi-search" />
+                    <InputText v-model="searchQuery" placeholder="Search files..." style="width: 300px;" />
+                </IconField>
+                <Button v-if="isAdminOrManager" label="Add File" icon="pi pi-plus" @click="router.push('/files/create')" />
+            </div>
+        </div>
+
         <div class="card bg-white dark:bg-surface-800 rounded-xl shadow-sm p-4">
-            <DataTable :value="files" :loading="loading" paginator :rows="10" tableStyle="min-width: 50rem"
+            <DataTable :value="filteredFiles" :loading="loading" paginator :rows="10" tableStyle="min-width: 50rem"
                        stripedRows :showGridlines="false" class="p-datatable-sm">
-                <template #header>
-                    <div class="flex justify-between items-center">
-                        <h3 class="text-lg font-semibold text-surface-900 dark:text-surface-0 m-0">All Files</h3>
-                        <Button v-if="isAdminOrManager" label="Add File" icon="pi pi-plus" @click="router.push('/files/create')" />
-                    </div>
-                </template>
                 <Column field="file_type" header="File Type" sortable></Column>
                 <Column field="client.business_name" header="Client" sortable></Column>
                 <Column field="assessment_year" header="Assessment Year" sortable></Column>
@@ -34,6 +40,7 @@
                         <div class="flex gap-2">
                             <Button v-if="isAdminOrManager" icon="pi pi-pencil" text rounded severity="info" @click="router.push(`/files/${slotProps.data.id}/edit`)" />
                             <Button icon="pi pi-eye" text rounded severity="secondary" @click="router.push(`/files/${slotProps.data.id}`)" />
+                            <Button v-if="isAdminOrManager" icon="pi pi-trash" text rounded severity="danger" @click="confirmDelete(slotProps.data)" />
                         </div>
                     </template>
                 </Column>
@@ -51,15 +58,40 @@ import Button from 'primevue/button';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Tag from 'primevue/tag';
+import InputText from 'primevue/inputtext';
+import IconField from 'primevue/iconfield';
+import InputIcon from 'primevue/inputicon';
+import { useConfirm } from 'primevue/useconfirm';
+import ConfirmDialog from 'primevue/confirmdialog';
+
+const confirm = useConfirm();
 
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
 const files = ref([]);
 const loading = ref(false);
+const searchQuery = ref('');
 
 const isAdminOrManager = computed(() => {
     return authStore.user?.roles?.some(role => role.name === 'admin' || role.name === 'manager');
+});
+
+const filteredFiles = computed(() => {
+    if (!searchQuery.value) {
+        return files.value;
+    }
+    
+    const query = searchQuery.value.toLowerCase();
+    return files.value.filter(file => {
+        return (
+            file.file_type?.toLowerCase().includes(query) ||
+            file.client?.business_name?.toLowerCase().includes(query) ||
+            file.assessment_year?.toLowerCase().includes(query) ||
+            file.financial_year?.toLowerCase().includes(query) ||
+            file.status?.toLowerCase().includes(query)
+        );
+    });
 });
 
 const fetchFiles = async () => {
@@ -92,6 +124,9 @@ const fetchFiles = async () => {
         }
         
         files.value = fetchedFiles;
+        
+        // Sort files in descending order (newest first)
+        files.value.sort((a, b) => b.id - a.id);
     } catch (error) {
         console.error('Error fetching files:', error);
     } finally {
@@ -110,6 +145,23 @@ const getStatusSeverity = (status) => {
         case 'received': return 'secondary';
         default: return 'secondary';
     }
+};
+
+const confirmDelete = (file) => {
+    confirm.require({
+        message: `Are you sure you want to delete this file (${file.file_type} - ${file.assessment_year})?`,
+        header: 'Confirm Delete',
+        icon: 'pi pi-exclamation-triangle',
+        acceptClass: 'p-button-danger',
+        accept: async () => {
+            try {
+                await api.delete(`/files/${file.id}`);
+                await fetchFiles();
+            } catch (error) {
+                console.error('Error deleting file:', error);
+            }
+        }
+    });
 };
 
 onMounted(() => {

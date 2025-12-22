@@ -24,57 +24,69 @@
                     <!-- Basic Info -->
                     <div class="flex flex-col gap-2">
                         <label for="business_name" class="text-sm font-medium text-surface-700 dark:text-surface-200">Business Name *</label>
-                        <InputText id="business_name" v-model="form.business_name" :invalid="!!errors.business_name"/>
+                        <InputText id="business_name" v-model="form.business_name" :invalid="!!errors.business_name" />
+                        <small class="text-red-500" v-if="errors.business_name">{{ errors.business_name[0] }}</small>
                     </div>
                     <div class="flex flex-col gap-2">
                         <label for="contact_person" class="text-sm font-medium text-surface-700 dark:text-surface-200">Contact Person</label>
-                        <InputText id="contact_person" v-model="form.contact_person" />
+                        <InputText id="contact_person" v-model="form.contact_person" :invalid="!!errors.contact_person" />
+                        <small class="text-red-500" v-if="errors.contact_person">{{ errors.contact_person[0] }}</small>
                     </div>
                     <div class="flex flex-col gap-2">
                         <label for="business_type" class="text-sm font-medium text-surface-700 dark:text-surface-200">Business Type</label>
-                        <Dropdown id="business_type" v-model="form.business_type" :options="businessTypes" placeholder="Select Type" />
+                        <Dropdown id="business_type" v-model="form.business_type" :options="businessTypes" placeholder="Select Type" :invalid="!!errors.business_type" />
+                        <small class="text-red-500" v-if="errors.business_type">{{ errors.business_type[0] }}</small>
                     </div>
 
                     <!-- Contact Info -->
                     <div class="flex flex-col gap-2">
                         <label for="email" class="text-sm font-medium text-surface-700 dark:text-surface-200">Email</label>
-                        <InputText id="email" v-model="form.email" type="email" />
+                        <InputText id="email" v-model="form.email" type="email" :invalid="!!errors.email" />
+                        <small class="text-red-500" v-if="errors.email">{{ errors.email[0] }}</small>
                     </div>
                     <div class="flex flex-col gap-2">
                         <label for="phone" class="text-sm font-medium text-surface-700 dark:text-surface-200">Phone</label>
-                        <InputText id="phone" v-model="form.phone" />
+                        <InputText id="phone" v-model="form.phone" :invalid="!!errors.phone" />
+                        <small class="text-red-500" v-if="errors.phone">{{ errors.phone[0] }}</small>
                     </div>
                     <div class="flex flex-col gap-2">
                         <label for="alternate_phone" class="text-sm font-medium text-surface-700 dark:text-surface-200">Alternate Phone</label>
-                        <InputText id="alternate_phone" v-model="form.alternate_phone" />
+                        <InputText id="alternate_phone" v-model="form.alternate_phone" :invalid="!!errors.alternate_phone" />
+                        <small class="text-red-500" v-if="errors.alternate_phone">{{ errors.alternate_phone[0] }}</small>
                     </div>
                     <div class="flex flex-col gap-2">
                         <label for="whatsapp_number" class="text-sm font-medium text-surface-700 dark:text-surface-200">WhatsApp Number</label>
-                        <InputText id="whatsapp_number" v-model="form.whatsapp_number" />
+                        <InputText id="whatsapp_number" v-model="form.whatsapp_number" :invalid="!!errors.whatsapp_number" />
+                        <small class="text-red-500" v-if="errors.whatsapp_number">{{ errors.whatsapp_number[0] }}</small>
                     </div>
 
                     <!-- Tax & Filing Info -->
                     <div class="flex flex-col gap-2">
                         <label for="pan_number" class="text-sm font-medium text-surface-700 dark:text-surface-200">PAN Number</label>
-                        <InputText id="pan_number" v-model="form.pan_number" class="uppercase" />
+                        <InputText id="pan_number" v-model="form.pan_number" class="uppercase" :invalid="!!errors.pan_number" />
+                        <small class="text-red-500" v-if="errors.pan_number">{{ errors.pan_number[0] }}</small>
                     </div>
                     <div class="flex flex-col gap-2">
                         <label for="gst_number" class="text-sm font-medium text-surface-700 dark:text-surface-200">GST Number</label>
-                        <InputText id="gst_number" v-model="form.gst_number" class="uppercase" />
+                        <InputText id="gst_number" v-model="form.gst_number" class="uppercase" :invalid="!!errors.gst_number" />
+                        <small class="text-red-500" v-if="errors.gst_number">{{ errors.gst_number[0] }}</small>
                     </div>
                     <div class="flex flex-col gap-2">
                         <label for="tin_number" class="text-sm font-medium text-surface-700 dark:text-surface-200">TIN Number</label>
-                        <InputText id="tin_number" v-model="form.tin_number" />
+                        <InputText id="tin_number" v-model="form.tin_number" :invalid="!!errors.tin_number" />
+                        <small class="text-red-500" v-if="errors.tin_number">{{ errors.tin_number[0] }}</small>
                     </div>
                     <div class="flex flex-col gap-2">
                         <label for="filing_cycle" class="text-sm font-medium text-surface-700 dark:text-surface-200">Filing Cycle</label>
-                        <Dropdown id="filing_cycle" v-model="form.filing_cycle" :options="filingCycles" placeholder="Select Cycle" />
+                        <Dropdown id="filing_cycle" v-model="form.filing_cycle" :options="filingCycles" placeholder="Select Cycle" :invalid="!!errors.filing_cycle" />
+                        <small class="text-red-500" v-if="errors.filing_cycle">{{ errors.filing_cycle[0] }}</small>
                     </div>
 
                     <!-- Address -->
                     <div class="flex flex-col gap-2 md:col-span-2 lg:col-span-3">
                         <label for="address" class="text-sm font-medium text-surface-700 dark:text-surface-200">Address</label>
-                        <Textarea id="address" v-model="form.address" rows="3" />
+                        <Textarea id="address" v-model="form.address" rows="3" :invalid="!!errors.address" />
+                        <small class="text-red-500" v-if="errors.address">{{ errors.address[0] }}</small>
                     </div>
                 </div>
 

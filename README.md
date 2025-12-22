@@ -74,6 +74,7 @@ This project runs `composer` inside the container to optimize performance on Win
 docker exec auditflow-app composer install
 docker exec auditflow-app php artisan key:generate
 docker exec auditflow-app php artisan migrate --seed
+docker exec auditflow-app php artisan storage:link
 ```
 
 **Frontend Dependencies:**
@@ -174,6 +175,10 @@ If the backend cannot connect to the database:
 **Backend:**
 ```bash
 docker exec auditflow-app php artisan test
+```
+**Storage Symlink for windows:**
+```bash
+mklink /D C:\wamp64\www\AuditFlow\backend\public\storage C:\wamp64\www\AuditFlow\backend\storage\app\public
 ```
 
 ## 📜 License

@@ -28,7 +28,7 @@ class InvoiceGenerated extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'mail'];
+        return ['database', \App\Notifications\Channels\WhatsAppChannel::class];
     }
 
     /**
@@ -40,6 +40,25 @@ class InvoiceGenerated extends Notification
             ->line('The introduction to the notification.')
             ->action('Notification Action', url('/'))
             ->line('Thank you for using our application!');
+    }
+
+    public function toWhatsApp($notifiable)
+    {
+        return [
+            'name' => 'invoice_generated', // Template name in Meta
+            'language' => [
+                'code' => 'en_US'
+            ],
+            'components' => [
+                [
+                    'type' => 'body',
+                    'parameters' => [
+                        ['type' => 'text', 'text' => $this->invoice->invoice_number],
+                        ['type' => 'text', 'text' => number_format($this->invoice->total_amount, 2)],
+                    ]
+                ]
+            ]
+        ];
     }
 
     /**

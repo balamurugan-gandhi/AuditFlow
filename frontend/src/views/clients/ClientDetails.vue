@@ -1,5 +1,6 @@
 <template>
     <div class="space-y-6">
+        <Toast />
         <div class="flex justify-end items-center">
             <Button label="Back" icon="pi pi-arrow-left" text @click="router.back()" />
         </div>
@@ -166,13 +167,33 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Notification Settings -->
+                <div class="card bg-white dark:bg-surface-800 rounded-xl shadow-sm p-6 border border-surface-200 dark:border-surface-700">
+                    <h3 class="text-lg font-bold text-surface-900 dark:text-surface-0 mb-4">Notification Settings</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-3 bg-surface-50 dark:bg-surface-900 rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400">
+                                    <i class="pi pi-whatsapp text-lg"></i>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-surface-900 dark:text-surface-0">WhatsApp Notifications</label>
+                                    <span class="block text-xs text-surface-500 dark:text-surface-400">Receive updates via WhatsApp</span>
+                                </div>
+                            </div>
+                            <InputSwitch v-model="client.whatsapp_notification_enabled" @change="updateNotificationSettings" />
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, nextTick } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import api from '../../api/axios';
 import Button from 'primevue/button';
@@ -181,9 +202,13 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Skeleton from 'primevue/skeleton';
 import Dropdown from 'primevue/dropdown';
+import InputSwitch from 'primevue/inputswitch';
+import Toast from 'primevue/toast';
+import { useToast } from 'primevue/usetoast';
 
 const route = useRoute();
 const router = useRouter();
+const toast = useToast();
 const client = ref(null);
 const loading = ref(true);
 const currentYear = new Date().getFullYear();
@@ -205,10 +230,44 @@ const fetchClient = async () => {
     try {
         const response = await api.get(`/clients/${route.params.id}`);
         client.value = response.data;
+        // Ensure boolean type for switch
+        if (client.value) {
+            client.value.whatsapp_notification_enabled = !!client.value.whatsapp_notification_enabled;
+        }
     } catch (error) {
         console.error('Error fetching client:', error);
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to load client details', life: 3000 });
     } finally {
         loading.value = false;
+    }
+};
+
+const updateNotificationSettings = async () => {
+    if (client.value.whatsapp_notification_enabled && !client.value.whatsapp_number && !client.value.phone) {
+        // Revert the toggle immediately in UI - usually needs a small delay for the component to register the v-model change first
+        setTimeout(() => {
+            client.value.whatsapp_notification_enabled = false;
+        }, 200);
+        
+        toast.add({ 
+            severity: 'warn', 
+            summary: 'Missing Contact Info', 
+            detail: 'Please add WhatsApp number to enable this notification setting', 
+            life: 3000 
+        });
+        return;
+    }
+
+    try {
+        await api.put(`/clients/${client.value.id}`, {
+            whatsapp_notification_enabled: client.value.whatsapp_notification_enabled
+        });
+        toast.add({ severity: 'success', summary: 'Success', detail: 'Notification settings updated', life: 3000 });
+    } catch (error) {
+        console.error('Error updating settings:', error);
+        // Revert change on error
+        client.value.whatsapp_notification_enabled = !client.value.whatsapp_notification_enabled;
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to update settings', life: 3000 });
     }
 };
 

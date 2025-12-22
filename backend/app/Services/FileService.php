@@ -30,12 +30,35 @@ class FileService
 
     public function createFile(array $data): File
     {
-        return $this->fileRepository->create($data);
+        $file = $this->fileRepository->create($data);
+
+        // Notify client if file is received
+        $client = $file->client;
+        if ($client) {
+            $client->notify(new \App\Notifications\FileReceived($file));
+        }
+
+        return $file;
     }
 
     public function updateFile(int $id, array $data): bool
     {
-        return $this->fileRepository->update($id, $data);
+        $updated = $this->fileRepository->update($id, $data);
+
+        if ($updated && isset($data['status'])) {
+            $file = $this->fileRepository->find($id);
+            $status = $data['status'];
+
+            // Notify client for specific statuses
+            if (in_array($status, ['completed', 'filed'])) {
+                $client = $file->client;
+                if ($client) {
+                    $client->notify(new \App\Notifications\FileStatusUpdated($file, $status));
+                }
+            }
+        }
+
+        return $updated;
     }
 
     public function deleteFile(int $id): bool

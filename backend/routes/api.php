@@ -14,11 +14,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/impersonate/{id}', [AuthController::class, 'impersonate']);
     Route::get('/backup/download', [\App\Http\Controllers\BackupController::class, 'download']);
     Route::get('/dashboard/stats', [\App\Http\Controllers\DashboardController::class, 'stats']);
-    
+
     Route::apiResource('clients', ClientController::class);
     Route::apiResource('employees', \App\Http\Controllers\EmployeeController::class);
     Route::apiResource('files', \App\Http\Controllers\FileController::class);
-    
+
     Route::post('/files/{id}/worklogs', [\App\Http\Controllers\WorkLogController::class, 'store']);
     Route::get('/files/{id}/logs', [\App\Http\Controllers\WorkLogController::class, 'getByFile']);
     Route::get('/work-logs', [\App\Http\Controllers\WorkLogController::class, 'index']);
@@ -36,4 +36,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index']);
     Route::get('/notifications/unread-count', [\App\Http\Controllers\NotificationController::class, 'unreadCount']);
     Route::put('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead']);
+
+    Route::get('/settings', [\App\Http\Controllers\SettingsController::class, 'index']);
+    Route::post('/settings', [\App\Http\Controllers\SettingsController::class, 'update']);
 });
