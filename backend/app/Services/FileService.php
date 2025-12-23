@@ -23,6 +23,11 @@ class FileService
         return $this->fileRepository->all();
     }
 
+    public function getFilesByClient(int $clientId, ?\App\Models\User $user = null): Collection
+    {
+        return $this->fileRepository->getByClient($clientId, $user);
+    }
+
     public function getFileById(int $id): ?File
     {
         return $this->fileRepository->find($id);
@@ -71,8 +76,8 @@ class FileService
         return $this->fileRepository->getByEmployee($userId);
     }
 
-    public function getDashboardStats(?string $assessmentYear, \App\Models\User $user, ?int $employeeId = null): array
+    public function getDashboardStats(?string $assessmentYear, \App\Models\User $user, ?int $employeeId = null, ?string $timePeriod = null): array
     {
-        return $this->fileRepository->getStats($assessmentYear, $user, $employeeId);
+        return $this->fileRepository->getStats($assessmentYear, $user, $employeeId, $timePeriod);
     }
 }

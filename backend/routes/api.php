@@ -31,6 +31,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/documents/{id}', [\App\Http\Controllers\DocumentController::class, 'destroy']);
 
     Route::apiResource('invoices', \App\Http\Controllers\InvoiceController::class)->only(['index', 'store', 'show']);
+    Route::get('/invoices/{id}/download-pdf', [\App\Http\Controllers\InvoiceController::class, 'downloadPdf']);
     Route::post('/invoices/{id}/payments', [\App\Http\Controllers\PaymentController::class, 'store']);
 
     Route::get('/notifications', [\App\Http\Controllers\NotificationController::class, 'index']);

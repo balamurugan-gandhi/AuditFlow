@@ -28,8 +28,31 @@
                         <p class="text-lg font-semibold text-surface-900 dark:text-surface-0">{{ invoice.due_date }}</p>
                     </div>
                     <div>
-                        <p class="text-sm text-surface-600 dark:text-surface-400">Total Amount</p>
-                        <p class="text-2xl font-bold text-surface-900 dark:text-surface-0">{{ formatCurrency(invoice.total_amount) }}</p>
+                        <p class="text-sm text-surface-600 dark:text-surface-400">Auditor Fee</p>
+                        <p class="text-2xl font-bold text-surface-900 dark:text-surface-0">{{ formatCurrency(invoice.auditor_fee) }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Company Information -->
+            <div class="card bg-white dark:bg-surface-800 rounded-xl shadow-sm p-6">
+                <h3 class="text-lg font-semibold text-surface-900 dark:text-surface-0 mb-4">From</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm text-surface-600 dark:text-surface-400">Company Name</p>
+                        <p class="text-surface-900 dark:text-surface-0">{{ companySettings.company_name || 'N/A' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-surface-600 dark:text-surface-400">Email</p>
+                        <p class="text-surface-900 dark:text-surface-0">{{ companySettings.company_email || 'N/A' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-surface-600 dark:text-surface-400">Phone</p>
+                        <p class="text-surface-900 dark:text-surface-0">{{ companySettings.company_phone || 'N/A' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-surface-600 dark:text-surface-400">Address</p>
+                        <p class="text-surface-900 dark:text-surface-0">{{ companySettings.company_address || 'N/A' }}</p>
                     </div>
                 </div>
             </div>
@@ -62,16 +85,16 @@
                 <h3 class="text-lg font-semibold text-surface-900 dark:text-surface-0 mb-4">Amount Details</h3>
                 <div class="space-y-3">
                     <div class="flex justify-between">
-                        <span class="text-surface-600 dark:text-surface-400">Subtotal</span>
-                        <span class="text-surface-900 dark:text-surface-0 font-medium">{{ formatCurrency(invoice.total_amount - (invoice.tax_amount || 0)) }}</span>
+                        <span class="text-surface-600 dark:text-surface-400">Total Tax Amount</span>
+                        <span class="text-surface-900 dark:text-surface-0 font-medium">{{ formatCurrency(invoice.total_tax_amount || 0) }}</span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-surface-600 dark:text-surface-400">Tax</span>
-                        <span class="text-surface-900 dark:text-surface-0 font-medium">{{ formatCurrency(invoice.tax_amount || 0) }}</span>
+                        <span class="text-surface-600 dark:text-surface-400">Auditor Fee</span>
+                        <span class="text-surface-900 dark:text-surface-0 font-medium">{{ formatCurrency(invoice.auditor_fee || 0) }}</span>
                     </div>
                     <div class="border-t border-surface-200 dark:border-surface-700 pt-3 flex justify-between">
                         <span class="text-lg font-semibold text-surface-900 dark:text-surface-0">Total</span>
-                        <span class="text-lg font-bold text-surface-900 dark:text-surface-0">{{ formatCurrency(invoice.total_amount) }}</span>
+                        <span class="text-lg font-bold text-surface-900 dark:text-surface-0">{{ formatCurrency(invoice.auditor_fee || 0) }}</span>
                     </div>
                 </div>
             </div>
@@ -102,6 +125,7 @@
 
             <!-- Actions -->
             <div class="flex justify-end gap-3">
+                <Button label="Download PDF" icon="pi pi-download" @click="downloadPdf" />
                 <Button label="Back" severity="secondary" @click="router.back()" />
             </div>
         </div>
@@ -122,6 +146,7 @@ const router = useRouter();
 const route = useRoute();
 const invoice = ref(null);
 const loading = ref(true);
+const companySettings = ref({});
 
 const fetchInvoice = async () => {
     try {
@@ -132,6 +157,15 @@ const fetchInvoice = async () => {
         router.push('/billing');
     } finally {
         loading.value = false;
+    }
+};
+
+const fetchCompanySettings = async () => {
+    try {
+        const response = await api.get('/settings');
+        companySettings.value = response.data;
+    } catch (error) {
+        console.error('Error fetching company settings:', error);
     }
 };
 
@@ -152,7 +186,25 @@ const formatPaymentMethod = (method) => {
     return method.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
 };
 
+const downloadPdf = async () => {
+    try {
+        const response = await api.get(`/invoices/${route.params.id}/download-pdf`, {
+            responseType: 'blob'
+        });
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `invoice-${invoice.value.invoice_number}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+    } catch (error) {
+        console.error('Error downloading PDF:', error);
+    }
+};
+
 onMounted(() => {
     fetchInvoice();
+    fetchCompanySettings();
 });
 </script>

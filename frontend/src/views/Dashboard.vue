@@ -1,17 +1,25 @@
 <template>
     <div class="dashboard">
-        <!-- Statistics Cards -->
-        <div class="flex justify-between items-center mb-8">
-            <div>
+        <!-- Header Section -->
+        <div class="mb-6">
+            <div class="mb-4">
                 <h2 class="text-3xl font-bold text-surface-900 dark:text-surface-0 m-0">{{ dashboardTitle }}</h2>
                 <p class="text-surface-500 dark:text-surface-400 mt-2">Overview of your audit workflow</p>
             </div>
-            <div class="flex gap-4 w-96">
-                <div v-if="authStore.isAdmin" class="w-1/2">
-                    <Dropdown v-model="selectedEmployee" :options="employees" optionLabel="name" optionValue="id" placeholder="Select Employee" class="w-full" showClear @change="fetchDashboardData" />
+            
+            <!-- Filters -->
+            <div class="flex gap-6 flex-wrap">
+                <div v-if="authStore.isAdmin" class="flex items-center gap-2">
+                    <i class="pi pi-users text-surface-600 dark:text-surface-400"></i>
+                    <Dropdown v-model="selectedEmployee" :options="employees" optionLabel="name" optionValue="id" placeholder="Select Employee" class="w-64" showClear @change="fetchDashboardData" />
                 </div>
-                <div :class="authStore.isAdmin ? 'w-1/2' : 'w-full'">
-                    <Dropdown v-model="selectedYear" :options="assessmentYears" placeholder="Select Year" class="w-full" @change="fetchDashboardData" />
+                <div class="flex items-center gap-2">
+                    <i class="pi pi-calendar text-surface-600 dark:text-surface-400"></i>
+                    <Dropdown v-model="selectedYear" :options="assessmentYears" placeholder="Select Year" class="w-64" @change="fetchDashboardData" />
+                </div>
+                <div class="flex items-center gap-2">
+                    <i class="pi pi-clock text-surface-600 dark:text-surface-400"></i>
+                    <Dropdown v-model="selectedTimePeriod" :options="timePeriods" optionLabel="label" optionValue="value" placeholder="Select Period" class="w-64" showClear @change="fetchDashboardData" />
                 </div>
             </div>
         </div>
@@ -119,7 +127,7 @@
             </div>
 
             <!-- Payment Received -->
-            <div class="dashboard-card card-teal" @click="!loading && navigateToFiles('payment_received')">
+            <div v-if="authStore.isAdmin || authStore.isManager" class="dashboard-card card-teal" @click="!loading && navigateToFiles('payment_received')">
                 <div class="card-bg-pattern"></div>
                 <div class="card-content">
                     <div>
@@ -211,7 +219,13 @@ const assessmentYears = ref([
     `${currentYear - 1}-${currentYear}`,
     `${currentYear - 2}-${currentYear - 1}`
 ]);
+const timePeriods = ref([
+    { label: 'Last 24 Hours', value: '24h' },
+    { label: 'Last 7 Days', value: '7d' },
+    { label: 'Last 30 Days', value: '30d' }
+]);
 const selectedYear = ref(assessmentYears.value[0]);
+const selectedTimePeriod = ref(null);
 const employees = ref([]);
 const selectedEmployee = ref(null);
 
@@ -311,7 +325,8 @@ const fetchDashboardData = async () => {
         const statsRes = await api.get('/dashboard/stats', {
             params: { 
                 assessment_year: selectedYear.value,
-                employee_id: selectedEmployee.value
+                employee_id: selectedEmployee.value,
+                time_period: selectedTimePeriod.value
             }
         });
         stats.value = statsRes.data;
@@ -343,13 +358,21 @@ const fetchEmployees = async () => {
 };
 
 const navigateToFiles = (status) => {
+    const query = { 
+        status: status, 
+        year: selectedYear.value 
+    };
+    
+    if (selectedTimePeriod.value) {
+        query.time_period = selectedTimePeriod.value;
+    }
+    
     if (status === 'payment_received') {
         // Handle payment received filter specifically if needed, or just go to files
-        // For now, we don't have a direct filter for this in the list, but we can pass it
-        router.push({ path: '/files', query: { payment_status: 'received', year: selectedYear.value } });
-    } else {
-        router.push({ path: '/files', query: { status: status, year: selectedYear.value } });
+        query.payment_status = 'received';
     }
+    
+    router.push({ path: '/files', query });
 };
 
 const formatCurrency = (value) => {

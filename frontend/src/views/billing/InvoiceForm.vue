@@ -6,8 +6,13 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="flex flex-col gap-2">
                         <label for="client" class="text-sm font-medium text-surface-700 dark:text-surface-200">Client</label>
-                        <Dropdown id="client" v-model="form.client_id" :options="clients" optionLabel="business_name" optionValue="id" placeholder="Select Client" filter required class="w-full" :invalid="!!errors.client_id" />
+                        <Dropdown id="client" v-model="form.client_id" :options="clients" optionLabel="business_name" optionValue="id" placeholder="Select Client" filter required class="w-full" :invalid="!!errors.client_id" @change="onClientChange" />
                         <small class="text-red-500" v-if="errors.client_id">{{ errors.client_id[0] }}</small>
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label for="file" class="text-sm font-medium text-surface-700 dark:text-surface-200">File</label>
+                        <Dropdown id="file" v-model="form.file_id" :options="clientFiles" optionLabel="file_display" optionValue="id" placeholder="Select File" filter class="w-full" :invalid="!!errors.file_id" :disabled="!form.client_id" />
+                        <small class="text-red-500" v-if="errors.file_id">{{ errors.file_id[0] }}</small>
                     </div>
                     <div class="flex flex-col gap-2">
                         <label for="invoice_number" class="text-sm font-medium text-surface-700 dark:text-surface-200">Invoice #</label>
@@ -25,14 +30,14 @@
                         <small class="text-red-500" v-if="errors.due_date">{{ errors.due_date[0] }}</small>
                     </div>
                     <div class="flex flex-col gap-2">
-                        <label for="amount" class="text-sm font-medium text-surface-700 dark:text-surface-200">Total Amount</label>
-                        <InputNumber id="amount" v-model="form.total_amount" mode="currency" currency="INR" locale="en-IN" required class="w-full" :invalid="!!errors.total_amount" />
-                        <small class="text-red-500" v-if="errors.total_amount">{{ errors.total_amount[0] }}</small>
+                        <label for="total_tax_amount" class="text-sm font-medium text-surface-700 dark:text-surface-200">Total Tax Amount</label>
+                        <InputNumber id="total_tax_amount" v-model="form.total_tax_amount" mode="currency" currency="INR" locale="en-IN" class="w-full" :invalid="!!errors.total_tax_amount" />
+                        <small class="text-red-500" v-if="errors.total_tax_amount">{{ errors.total_tax_amount[0] }}</small>
                     </div>
                     <div class="flex flex-col gap-2">
-                        <label for="tax" class="text-sm font-medium text-surface-700 dark:text-surface-200">Tax Amount</label>
-                        <InputNumber id="tax" v-model="form.tax_amount" mode="currency" currency="INR" locale="en-IN" class="w-full" :invalid="!!errors.tax_amount" />
-                        <small class="text-red-500" v-if="errors.tax_amount">{{ errors.tax_amount[0] }}</small>
+                        <label for="auditor_fee" class="text-sm font-medium text-surface-700 dark:text-surface-200">Auditor Fee</label>
+                        <InputNumber id="auditor_fee" v-model="form.auditor_fee" mode="currency" currency="INR" locale="en-IN" required class="w-full" :invalid="!!errors.auditor_fee" />
+                        <small class="text-red-500" v-if="errors.auditor_fee">{{ errors.auditor_fee[0] }}</small>
                     </div>
                     <div class="flex flex-col gap-2 md:col-span-2">
                         <label for="notes" class="text-sm font-medium text-surface-700 dark:text-surface-200">Notes</label>
@@ -63,14 +68,16 @@ import Dropdown from 'primevue/dropdown';
 const router = useRouter();
 const loading = ref(false);
 const clients = ref([]);
+const clientFiles = ref([]);
 
 const form = ref({
     client_id: null,
+    file_id: null,
     invoice_number: `INV-${Date.now()}`,
     invoice_date: new Date().toISOString().split('T')[0],
     due_date: '',
-    total_amount: 0,
-    tax_amount: 0,
+    total_tax_amount: null,
+    auditor_fee: null,
     notes: ''
 });
 
@@ -83,6 +90,26 @@ const fetchClients = async () => {
     } catch (error) {
         console.error('Error fetching clients:', error);
     }
+};
+
+const onClientChange = async () => {
+    if (form.value.client_id) {
+        try {
+            const response = await api.get('/files', {
+                params: { client_id: form.value.client_id }
+            });
+            clientFiles.value = response.data.map(file => ({
+                ...file,
+                file_display: `${file.file_type} - ${file.assessment_year}`
+            }));
+        } catch (error) {
+            console.error('Error fetching client files:', error);
+            clientFiles.value = [];
+        }
+    } else {
+        clientFiles.value = [];
+    }
+    form.value.file_id = null; // Reset file selection when client changes
 };
 
 const handleSubmit = async () => {

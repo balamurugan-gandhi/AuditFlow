@@ -40,7 +40,7 @@ class FileRepository implements FileRepositoryInterface
     {
         return File::with(['client', 'assignee'])->find($id);
     }
-    
+
     public function create(array $data): File
     {
         return File::create($data);
@@ -69,7 +69,26 @@ class FileRepository implements FileRepositoryInterface
         return File::with(['client'])->where('assigned_to', $userId)->get();
     }
 
-    public function getStats(?string $assessmentYear, \App\Models\User $user, ?int $employeeId = null): array
+    public function getByClient(int $clientId, ?\App\Models\User $user = null): Collection
+    {
+        $query = File::with(['client', 'assignee'])->where('client_id', $clientId);
+
+        // Apply user permissions if provided
+        if ($user) {
+            if ($user->hasRole('admin') || $user->hasRole('manager')) {
+                // Admins and managers see all files for the client
+            } elseif ($user->hasRole('employee')) {
+                // Employees see only files assigned to them for this client
+                $query->where('assigned_to', $user->id);
+            } else {
+                // Clients see files for their assigned clients (should already be filtered by client_id)
+            }
+        }
+
+        return $query->get();
+    }
+
+    public function getStats(?string $assessmentYear, \App\Models\User $user, ?int $employeeId = null, ?string $timePeriod = null): array
     {
         $query = File::query();
 
@@ -96,6 +115,22 @@ class FileRepository implements FileRepositoryInterface
             $query->where('assessment_year', $assessmentYear);
         }
 
+        // Filter by Time Period
+        if ($timePeriod) {
+            $now = now();
+            switch ($timePeriod) {
+                case '24h':
+                    $query->where('created_at', '>=', $now->subHours(24));
+                    break;
+                case '7d':
+                    $query->where('created_at', '>=', $now->subDays(7));
+                    break;
+                case '30d':
+                    $query->where('created_at', '>=', $now->subDays(30));
+                    break;
+            }
+        }
+
         // Use conditional aggregation for performance
         $stats = $query->toBase()->selectRaw("
             count(*) as total,
@@ -105,7 +140,7 @@ class FileRepository implements FileRepositoryInterface
             sum(case when status in ('completed', 'filed') then 1 else 0 end) as completed,
             sum(case when payment_id is not null then 1 else 0 end) as payment_received
         ")->first();
-        
+
         // Get total clients count
         $totalClients = 0;
         if ($user->hasRole('employee')) {

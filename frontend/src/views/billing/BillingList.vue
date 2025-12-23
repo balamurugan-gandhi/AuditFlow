@@ -16,10 +16,11 @@
                        stripedRows :showGridlines="false" class="p-datatable-sm">
                 <Column field="invoice_number" header="Invoice #" sortable></Column>
                 <Column field="client.business_name" header="Client" sortable></Column>
+                <Column field="file.file_number" header="File ID" sortable></Column>
                 <Column field="invoice_date" header="Date" sortable></Column>
-                <Column field="total_amount" header="Amount" sortable>
+                <Column field="auditor_fee" header="Amount" sortable>
                     <template #body="slotProps">
-                        {{ formatCurrency(slotProps.data.total_amount) }}
+                        {{ formatCurrency(slotProps.data.auditor_fee) }}
                     </template>
                 </Column>
                 <Column header="Status">
@@ -46,7 +47,7 @@
             <div class="space-y-4" v-if="selectedInvoice">
                 <div class="p-3 bg-surface-50 dark:bg-surface-700 rounded-md mb-4">
                     <p class="text-sm text-surface-600 dark:text-surface-300">Invoice #{{ selectedInvoice.invoice_number }}</p>
-                    <p class="text-xl font-bold text-surface-900 dark:text-surface-0">{{ formatCurrency(selectedInvoice.total_amount) }}</p>
+                    <p class="text-xl font-bold text-surface-900 dark:text-surface-0">{{ formatCurrency(selectedInvoice.auditor_fee) }}</p>
                 </div>
 
                 <div class="flex flex-col gap-2">
@@ -131,7 +132,7 @@ const fetchInvoices = async () => {
 
 const openPaymentDialog = (invoice) => {
     selectedInvoice.value = invoice;
-    paymentForm.value.amount = invoice.total_amount; // Default to full amount
+    paymentForm.value.amount = invoice.auditor_fee; // Default to full amount
     showPaymentDialog.value = true;
 };
 

@@ -96,19 +96,19 @@ const routes = [
                 path: 'billing',
                 name: 'BillingList',
                 component: () => import('../views/billing/BillingList.vue'),
-                meta: { title: 'Billing' }
+                meta: { title: 'Billing', requiresAdminOrManager: true }
             },
             {
                 path: 'billing/create',
                 name: 'InvoiceCreate',
                 component: () => import('../views/billing/InvoiceForm.vue'),
-                meta: { title: 'Create Invoice' }
+                meta: { title: 'Create Invoice', requiresAdminOrManager: true }
             },
             {
                 path: 'billing/:id',
                 name: 'InvoiceDetails',
                 component: () => import('../views/billing/InvoiceDetails.vue'),
-                meta: { title: 'Invoice Details' }
+                meta: { title: 'Invoice Details', requiresAdminOrManager: true }
             },
             {
                 path: 'work-logs',

@@ -13,11 +13,14 @@ class Invoice extends Model
 
     protected $fillable = [
         'client_id',
+        'file_id',
         'invoice_number',
         'invoice_date',
         'due_date',
         'total_amount',
         'tax_amount',
+        'total_tax_amount',
+        'auditor_fee',
         'status',
         'notes',
     ];
@@ -25,6 +28,11 @@ class Invoice extends Model
     public function client()
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function file()
+    {
+        return $this->belongsTo(\App\Models\File::class);
     }
 
     public function payments()

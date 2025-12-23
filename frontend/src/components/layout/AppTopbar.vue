@@ -17,9 +17,24 @@ const authStore = useAuthStore();
 const notificationCount = ref(0);
 const notifications = ref([]);
 const op = ref();
+const companySettings = ref({});
 
 const pageTitle = computed(() => {
     return route.meta.title || 'Dashboard';
+});
+
+const companyName = computed(() => {
+    return companySettings.value.company_name || 'AuditFlow';
+});
+
+const companyLogo = computed(() => {
+    if (companySettings.value.company_logo) {
+        const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+        // Remove '/api' from the end if it exists
+        const apiBase = baseUrl.replace('/api', '');
+        return `${apiBase}/storage/${companySettings.value.company_logo}`;
+    }
+    return null;
 });
 
 const fetchNotifications = async () => {
@@ -35,6 +50,15 @@ const fetchNotifications = async () => {
     }
 };
 
+const fetchCompanySettings = async () => {
+    try {
+        const response = await api.get('/settings');
+        companySettings.value = response.data;
+    } catch (error) {
+        console.error('Error fetching company settings:', error);
+    }
+};
+
 const toggleNotifications = (event) => {
     op.value.toggle(event);
 };
@@ -46,6 +70,7 @@ const handleLogout = async () => {
 
 onMounted(() => {
     fetchNotifications();
+    fetchCompanySettings();
     // Poll for notifications every 60s
     setInterval(fetchNotifications, 60000);
 });
@@ -54,7 +79,15 @@ onMounted(() => {
 <template>
     <header class="topbar">
         <div class="topbar-left">
-            <h2 class="page-title">{{ pageTitle }}</h2>
+            <div class="company-branding">
+                <div v-if="companyLogo" class="company-logo">
+                    <img :src="companyLogo" :alt="companyName" />
+                </div>
+                <div v-else class="company-logo-placeholder">
+                    <i class="pi pi-building"></i>
+                </div>
+                <span class="company-name">{{ companyName }}</span>
+            </div>
         </div>
 
         <div class="topbar-right">
@@ -121,8 +154,46 @@ onMounted(() => {
     gap: 1rem;
 }
 
-.page-title {
-    font-size: 1.5rem;
+.company-branding {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.company-logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid #e2e8f0;
+    flex-shrink: 0;
+}
+
+.company-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.company-logo-placeholder {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    border: 2px solid #e2e8f0;
+    flex-shrink: 0;
+}
+
+.company-logo-placeholder i {
+    font-size: 1.25rem;
+}
+
+.company-name {
+    font-size: 1.25rem;
     font-weight: 700;
     color: #1e293b;
     margin: 0;

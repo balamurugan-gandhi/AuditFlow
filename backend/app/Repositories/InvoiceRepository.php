@@ -24,7 +24,7 @@ class InvoiceRepository implements InvoiceRepositoryInterface
 
     public function find(int $id): ?Invoice
     {
-        return Invoice::with(['client', 'payments'])->find($id);
+        return Invoice::with(['client', 'payments', 'file'])->find($id);
     }
 
     public function delete(int $id): bool
@@ -38,17 +38,17 @@ class InvoiceRepository implements InvoiceRepositoryInterface
 
     public function getByClient(int $clientId): Collection
     {
-        return Invoice::where('client_id', $clientId)->orderBy('invoice_date', 'desc')->get();
+        return Invoice::with(['client', 'file'])->where('client_id', $clientId)->orderBy('invoice_date', 'desc')->get();
     }
 
     public function getPending(): Collection
     {
-        return Invoice::whereIn('status', ['unpaid', 'partial', 'overdue'])->orderBy('due_date', 'asc')->get();
+        return Invoice::with(['client', 'file'])->whereIn('status', ['unpaid', 'partial', 'overdue'])->orderBy('due_date', 'asc')->get();
     }
 
     public function all(): Collection
     {
-        return Invoice::with('client')->orderBy('invoice_date', 'desc')->get();
+        return Invoice::with(['client', 'file'])->orderBy('invoice_date', 'desc')->get();
     }
 
     public function allForUser(\App\Models\User $user): Collection
@@ -57,7 +57,7 @@ class InvoiceRepository implements InvoiceRepositoryInterface
             return $this->all();
         }
 
-        return Invoice::with('client')
+        return Invoice::with(['client', 'file'])
             ->whereHas('client', function ($query) use ($user) {
                 $query->whereHas('users', function ($q) use ($user) {
                     $q->where('user_id', $user->id);

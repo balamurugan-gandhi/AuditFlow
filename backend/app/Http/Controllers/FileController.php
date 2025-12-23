@@ -15,9 +15,16 @@ class FileController extends Controller
         $this->fileService = $fileService;
     }
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $files = $this->fileService->getAllFiles(auth()->user());
+        $clientId = $request->query('client_id');
+
+        if ($clientId) {
+            $files = $this->fileService->getFilesByClient($clientId, auth()->user());
+        } else {
+            $files = $this->fileService->getAllFiles(auth()->user());
+        }
+
         return response()->json($files);
     }
 

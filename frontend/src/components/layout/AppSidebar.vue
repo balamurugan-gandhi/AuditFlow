@@ -71,12 +71,12 @@ const menuItems = computed(() => {
     if (isAdminOrManager) {
         items.push({ label: 'Clients', icon: 'pi pi-users', to: '/clients' });
         items.push({ label: 'Employees', icon: 'pi pi-id-card', to: '/employees' });
+        items.push({ label: 'Billing', icon: 'pi pi-wallet', to: '/billing' });
     }
 
     items.push(
         { label: 'Files', icon: 'pi pi-folder', to: '/files' },
         { label: 'Work Logs', icon: 'pi pi-clock', to: '/work-logs' },
-        { label: 'Billing', icon: 'pi pi-wallet', to: '/billing' },
     );
 
     if (isAdminOrManager) {
