@@ -1,0 +1,89 @@
+services:
+  app:
+    image: auditflow-app:latest
+    container_name: auditflow-app
+    restart: unless-stopped
+    user: "1000:1000"
+    working_dir: /var/www/html
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+    volumes:
+      - ./docker/php/custom.ini:/usr/local/etc/php/conf.d/custom.ini
+      - ./files/tmp:/tmp
+    networks:
+      - auditflow-network
+    depends_on:
+      - db
+      - redis
+
+  nginx:
+    image: nginx:alpine
+    container_name: auditflow-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      # static assets already baked into image or Laravel public/
+    networks:
+      - auditflow-network
+    depends_on:
+      - app
+
+  db:
+    image: mysql:8.0
+    container_name: auditflow-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - auditflow-network
+
+  redis:
+    image: redis:alpine
+    container_name: auditflow-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - auditflow-network
+
+  worker:
+    image: auditflow-app:latest
+    container_name: auditflow-worker
+    restart: unless-stopped
+    command: php artisan queue:work --sleep=3 --tries=3
+    user: "1000:1000"
+    networks:
+      - auditflow-network
+    depends_on:
+      - app
+      - redis
+      - db
+
+  scheduler:
+    image: auditflow-app:latest
+    container_name: auditflow-scheduler
+    restart: unless-stopped
+    command: php artisan schedule:work
+    user: "1000:1000"
+    networks:
+      - auditflow-network
+    depends_on:
+      - app
+      - redis
+      - db
+
+networks:
+  auditflow-network:
+    driver: bridge
+
+volumes:
+  db_data:
+  redis_data:

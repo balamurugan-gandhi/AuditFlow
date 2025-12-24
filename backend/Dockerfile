@@ -33,6 +33,4 @@ RUN mkdir -p /home/dev/.composer \
     && mkdir -p /var/www/html/vendor /var/www/html/storage \
     && chown -R dev:www-data /var/www/html
 
-RUN composer install --no-interaction
-
 USER dev

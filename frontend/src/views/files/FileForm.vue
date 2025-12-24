@@ -18,7 +18,7 @@
 
             <!-- Actual Form -->
             <form v-else @submit.prevent="handleSubmit" class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                     <div class="flex flex-col gap-2">
                         <label for="client" class="text-sm font-medium text-surface-700 dark:text-surface-200">Client</label>
                         <Dropdown id="client" v-model="form.client_id" :options="clients" optionLabel="business_name" optionValue="id" placeholder="Select Client" filter required class="w-full" />
@@ -26,6 +26,24 @@
                     <div class="flex flex-col gap-2">
                         <label for="file_type" class="text-sm font-medium text-surface-700 dark:text-surface-200">File Type</label>
                         <Dropdown id="file_type" v-model="form.file_type" :options="serviceTypes" placeholder="Select Type" required class="w-full" />
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <label for="turnover" class="text-sm font-medium text-surface-700 dark:text-surface-200">Turnover *</label>
+                        <Dropdown id="turnover" v-model="form.turnover" :options="turnoverOptions" optionLabel="label" optionValue="key" placeholder="Select Turnover" required class="w-full" />
+                    </div>
+                    <div class="flex flex-col gap-2" v-if="isEditing">
+                        <label for="assignee" class="text-sm font-medium text-surface-700 dark:text-surface-200">Assignee</label>
+                        <template v-if="form.assigned_to">
+                            <div class="flex items-center gap-2">
+                                <span class="px-3 py-1 bg-surface-200 dark:bg-surface-700 rounded text-surface-900 dark:text-surface-100">
+                                    {{ employees.find(e => e.id === form.assigned_to)?.name || 'Unknown' }}
+                                </span>
+                                <Button icon="pi pi-times" size="small" text rounded @click="form.assigned_to = null" aria-label="Clear Assignee" />
+                            </div>
+                        </template>
+                        <template v-else>
+                            <Dropdown id="assignee" v-model="form.assigned_to" :options="employees" optionLabel="name" optionValue="id" placeholder="Select Employee" filter class="w-full" />
+                        </template>
                     </div>
                     <div class="flex flex-col gap-2">
                         <label for="assessment_year" class="text-sm font-medium text-surface-700 dark:text-surface-200">Assessment Year</label>
@@ -36,16 +54,12 @@
                         <InputText id="financial_year" v-model="form.financial_year" placeholder="e.g. 2023-2024" />
                     </div>
                     <div class="flex flex-col gap-2">
-                        <label for="status" class="text-sm font-medium text-surface-700 dark:text-surface-200">Status</label>
-                        <Dropdown id="status" v-model="form.status" :options="statuses" placeholder="Select Status" required class="w-full" />
+                        <label for="estimated_completion_date" class="text-sm font-medium text-surface-700 dark:text-surface-200">Estimated Completion Date *</label>
+                        <Calendar id="estimated_completion_date" v-model="form.estimated_completion_date" dateFormat="yy-mm-dd" showIcon required class="w-full" />
                     </div>
                     <div class="flex flex-col gap-2">
-                        <label for="assignee" class="text-sm font-medium text-surface-700 dark:text-surface-200">Assignee</label>
-                        <Dropdown id="assignee" v-model="form.assigned_to" :options="employees" optionLabel="name" optionValue="id" placeholder="Select Employee" filter class="w-full" />
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <label for="payment_request_date" class="text-sm font-medium text-surface-700 dark:text-surface-200">Payment Request Date</label>
-                        <Calendar id="payment_request_date" v-model="form.payment_request_date" dateFormat="yy-mm-dd" showIcon class="w-full" />
+                        <label v-if="isEditing" for="status" class="text-sm font-medium text-surface-700 dark:text-surface-200">Status</label>
+                        <Dropdown v-if="isEditing" id="status" v-model="form.status" :options="statuses" placeholder="Select Status" required class="w-full" />
                     </div>
                     <div class="flex flex-col gap-2 md:col-span-2">
                         <label for="notes" class="text-sm font-medium text-surface-700 dark:text-surface-200">Notes</label>
@@ -80,9 +94,21 @@ const loading = ref(false);
 const fetchingData = ref(!!route.params.id);
 const clients = ref([]);
 const employees = ref([]);
+// Add an 'Unassigned' option for the assignee dropdown in edit mode
+const assigneeOptions = computed(() => [
+    { id: null, name: 'Unassigned' },
+    ...employees.value
+]);
 
 const serviceTypes = ['Income Tax', 'GST', 'Audit', 'Accounting', 'Consulting'];
-const statuses = ['received', 'assigned', 'in-progress', 'pending-info', 'ready-to-file', 'filed', 'completed'];
+const statuses = ['received', 'assigned', 'in-progress', 'ready-to-file', 'filed', 'completed'];
+
+const turnoverOptions = [
+    { key: 'AB', label: 'Above 2 Crores' },
+    { key: 'AD', label: '1 to 2 Crores' },
+    { key: 'NR', label: 'Less than 1 Crore' },
+    { key: 'LA', label: 'Less than 50 Lakhs' }
+];
 
 const form = ref({
     client_id: null,
@@ -91,8 +117,8 @@ const form = ref({
     financial_year: '',
     status: 'received',
     assigned_to: null,
+    turnover: null,
     estimated_completion_date: null,
-    payment_request_date: null,
     notes: ''
 });
 
@@ -116,13 +142,29 @@ const fetchData = async () => {
     }
 };
 
+const formatDateForApi = (date) => {
+    if (!date) return null;
+    const d = new Date(date);
+    const month = '' + (d.getMonth() + 1);
+    const day = '' + d.getDate();
+    const year = d.getFullYear();
+    return [year, month.padStart(2, '0'), day.padStart(2, '0')].join('-');
+};
+
 const handleSubmit = async () => {
     loading.value = true;
     try {
+        const payload = { ...form.value };
+        if (!isEditing.value) {
+            payload.status = 'received';
+        }
+        if (payload.estimated_completion_date) {
+            payload.estimated_completion_date = formatDateForApi(payload.estimated_completion_date);
+        }
         if (isEditing.value) {
-            await api.put(`/files/${route.params.id}`, form.value);
+            await api.put(`/files/${route.params.id}`, payload);
         } else {
-            await api.post('/files', form.value);
+            await api.post('/files', payload);
         }
         router.push('/files');
     } catch (error) {

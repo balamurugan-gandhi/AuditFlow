@@ -280,7 +280,7 @@ const handleLogin = async () => {
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
 }
 
-.form-group :deep(.p-password .p-icon) {
+/* .form-group :deep(.p-password .p-icon) {
     position: absolute !important;
     right: 1rem !important;
     top: 50% !important;
@@ -288,7 +288,7 @@ const handleLogin = async () => {
     color: #64748b !important;
     cursor: pointer !important;
     z-index: 10 !important;
-}
+} */
 
 .error-message {
     color: #dc2626;

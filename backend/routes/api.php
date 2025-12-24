@@ -16,6 +16,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard/stats', [\App\Http\Controllers\DashboardController::class, 'stats']);
 
     Route::apiResource('clients', ClientController::class);
+    Route::apiResource('clients.notes', \App\Http\Controllers\ClientNoteController::class)->shallow();
     Route::apiResource('employees', \App\Http\Controllers\EmployeeController::class);
     Route::apiResource('files', \App\Http\Controllers\FileController::class);
 

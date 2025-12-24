@@ -1,4 +1,5 @@
 <template>
+    <ConfirmDialog />
     <div class="space-y-6">
         <!-- Skeleton Loading State -->
         <div v-if="loading" class="space-y-6">
@@ -144,20 +145,63 @@
                                             </div>
                                         </div>
                                         <div v-if="documents.length === 0" class="col-span-full text-center py-12">
-                                             <div class="flex items-center gap-4">
-                                            <div class="w-16 h-16 bg-surface-100 dark:bg-surface-700 rounded-full flex items-center justify-center mx-auto mb-4 text-surface-400">
-                                                <i class="pi pi-folder-open text-2xl"></i>
-                                            </div>
-                                            <div>
-                                            <p class="text-surface-500 font-medium">No documents uploaded</p>
-                                            <p class="text-surface-400 text-sm mt-1">Upload relevant files here</p>
-                                            </div>
+                                            <div class="flex flex-col items-center gap-3">
+                                                <div class="w-16 h-16 bg-surface-100 dark:bg-surface-700 rounded-full flex items-center justify-center text-surface-400">
+                                                    <i class="pi pi-folder-open text-2xl"></i>
+                                                </div>
+
+                                                <div>
+                                                    <p class="text-surface-500 font-medium">No documents uploaded</p>
+                                                    <p class="text-surface-400 text-sm mt-1">Upload relevant files here</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </TabPanel>
                             </TabPanels>
                         </Tabs>
+                    </div>
+                     <!-- Notes Table -->
+                    <div class="card bg-white dark:bg-surface-800 p-6 rounded-xl shadow-sm border border-surface-100 dark:border-surface-700 mt-6">
+                        <h3 class="text-lg font-semibold mb-6 flex items-center gap-2">
+                            <i class="pi pi-align-left text-orange-500"></i>
+                            Notes
+                        </h3>
+                        <DataTable :value="fileNotes" :loading="notesLoading" stripedRows :showGridlines="false" class="p-datatable-sm mb-4">
+                            <template #empty>
+                                <div class="text-center p-4">
+                                    <i class="pi pi-info-circle text-4xl text-surface-400 mb-4"></i>
+                                    <h3 class="text-xl font-semibold text-surface-700 dark:text-surface-300 mb-2">No Notes Found</h3>
+                                    <p class="text-surface-500 dark:text-surface-400">
+                                        No notes have been added for this file yet.
+                                    </p>
+                                </div>
+                            </template>
+                            <Column field="reason" header="Reason" style="min-width: 200px"></Column>
+                            <Column field="user.name" header="User" style="min-width: 120px"></Column>
+                            <Column field="created_at" header="Date" style="min-width: 120px">
+                                <template #body="slotProps">
+                                    {{ formatDate(slotProps.data.created_at) }}
+                            </template>
+                            </Column>     
+                        </DataTable>
+                        <div class="flex justify-end">
+                            <Button label="Add Note" icon="pi pi-plus" @click="openAddNoteDialog" />
+                        </div>
+                        <Dialog v-model:visible="addNoteDialogVisible" modal header="Add Note" :style="{ width: '32rem', padding: '2rem' }" class="add-note-dialog">
+                            <div class="flex flex-col gap-6 py-2 px-2">
+                                <div>
+                                    <label for="reason" class="block text-base font-semibold mb-2 text-surface-900 dark:text-surface-100">Reason *</label>
+                                    <Textarea id="reason" v-model="noteForm.reason" rows="6" class="w-full rounded-lg border border-surface-200 focus:border-primary-500 transition-all" style="min-height: 120px;" />
+                                </div>
+                            </div>
+                            <template #footer>
+                                <div class="flex justify-end gap-3 pt-2">
+                                    <Button label="Cancel" icon="pi pi-times" text @click="addNoteDialogVisible = false" class="px-4 py-2 text-base" />
+                                    <Button label="Save" icon="pi pi-check" @click="saveNote" :loading="notesLoading" class="px-4 py-2 text-base" />
+                                </div>
+                            </template>
+                        </Dialog>
                     </div>
                 </div>
 
@@ -184,8 +228,18 @@
                                     <i class="pi pi-align-left"></i>
                                 </div>
                                 <div>
-                                    <label class="text-xs font-medium text-surface-500 uppercase block mb-1">Notes</label>
+                                    <label class="text-xs font-medium text-surface-500 uppercase block mb-1">Admin Notes</label>
                                     <p class="text-surface-900 dark:text-surface-0 text-sm leading-relaxed">{{ file.notes || 'No notes provided' }}</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-3">
+                                <div class="w-8 h-8 rounded-full bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center text-purple-600 flex-shrink-0">
+                                    <i class="pi pi-calendar"></i>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-medium text-surface-500 uppercase block mb-1">Est. Completion Date</label>
+                                    <p class="text-surface-900 dark:text-surface-0 text-sm">{{ file.estimated_completion_date || 'Not set' }}</p>
                                 </div>
                             </div>
 
@@ -198,8 +252,18 @@
                                     <p class="text-surface-900 dark:text-surface-0 text-sm">{{ formatDate(file.created_at) }}</p>
                                 </div>
                             </div>
+
+                            <div class="flex items-start gap-3">
+                                <div class="w-8 h-8 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-red-600 flex-shrink-0">
+                                    <i class="pi pi-chart-bar"></i>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-medium text-surface-500 uppercase block mb-1">Turnover</label>
+                                    <p class="text-surface-900 dark:text-surface-0 text-sm">{{ file.turnover || 'Not set' }}</p>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    </div>                   
                 </div>
             </div>
         </div>
@@ -244,6 +308,10 @@ import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
 import Textarea from 'primevue/textarea';
 import Skeleton from 'primevue/skeleton';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import { useConfirm } from 'primevue/useconfirm';
+import ConfirmDialog from 'primevue/confirmdialog';
 
 import { useAuthStore } from '../../stores/auth';
 
@@ -387,14 +455,22 @@ const getStatusSeverity = (status) => {
         case 'ready-to-file': return 'info';
         case 'in-progress': return 'info';
         case 'assigned': return 'secondary';
-        case 'pending-info': return 'warning';
         case 'received': return 'secondary';
         default: return 'secondary';
     }
 };
 
 const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString();
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    return date.toLocaleString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
 };
 
 const formatSize = (bytes) => {
@@ -405,7 +481,72 @@ const formatSize = (bytes) => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
+// --- Notes Section ---
+const fileNotes = ref([]);
+const notesLoading = ref(false);
+const addNoteDialogVisible = ref(false);
+const noteForm = ref({ reason: '' });
+
+const fetchNotes = async () => {
+    if (!file.value?.client_id || !file.value?.assessment_year) return;
+    notesLoading.value = true;
+    try {
+        const res = await api.get(`/clients/${file.value.client_id}/notes`, {
+            params: { assessment_year: file.value.assessment_year }
+        });
+        fileNotes.value = res.data || [];
+    } catch (error) {
+        fileNotes.value = [];
+    } finally {
+        notesLoading.value = false;
+    }
+};
+
+const openAddNoteDialog = () => {
+    noteForm.value = { reason: '' };
+    addNoteDialogVisible.value = true;
+};
+
+const saveNote = async () => {
+    if (!file.value?.client_id || !file.value?.assessment_year) return;
+    notesLoading.value = true;
+    try {
+        await api.post(`/clients/${file.value.client_id}/notes`, {
+            ...noteForm.value,
+            assessment_year: file.value.assessment_year
+        });
+        addNoteDialogVisible.value = false;
+        await fetchNotes();
+    } catch (error) {
+        // handle error
+    } finally {
+        notesLoading.value = false;
+    }
+};
+
+const confirm = useConfirm();
+
+const deleteNote = (note) => {
+    confirm.require({
+        message: 'Are you sure you want to delete this note?',
+        header: 'Delete Confirmation',
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Yes',
+        rejectLabel: 'No',
+        accept: async () => {
+            try {
+                await api.delete(`/clients/${file.value.client_id}/notes/${note.id}`);
+                await fetchNotes();
+            } catch (error) {
+                // handle error
+            }
+        },
+    });
+};
+
 onMounted(() => {
-    fetchData();
+    fetchData().then(() => {
+        fetchNotes();
+    });
 });
 </script>

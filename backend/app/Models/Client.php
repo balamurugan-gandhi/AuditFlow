@@ -36,6 +36,11 @@ class Client extends Model
         return $this->hasMany(File::class);
     }
 
+    public function notes()
+    {
+        return $this->hasMany(ClientNote::class)->orderBy('created_at', 'desc');
+    }
+
     /**
      * Scope a query to only include clients assigned to the given user.
      */

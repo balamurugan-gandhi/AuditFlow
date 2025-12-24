@@ -276,7 +276,6 @@ const getStatusSeverity = (status) => {
         'received': 'secondary',
         'assigned': 'info',
         'in-progress': 'info',
-        'pending-info': 'warning',
         'ready-to-file': 'info',
         'filed': 'success',
         'completed': 'success'

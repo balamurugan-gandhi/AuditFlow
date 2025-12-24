@@ -68,6 +68,19 @@ const handleLogout = async () => {
     router.push('/login');
 };
 
+const formatDateIST = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+};
+
 onMounted(() => {
     fetchNotifications();
     fetchCompanySettings();
@@ -124,7 +137,7 @@ onMounted(() => {
                         </div>
                         <div class="notification-content">
                             <p class="notification-message">{{ notif.data.message }}</p>
-                            <p class="notification-time">{{ new Date(notif.created_at).toLocaleString() }}</p>
+                            <p class="notification-time">{{ formatDateIST(notif.created_at) }}</p>
                         </div>
                     </div>
                 </div>

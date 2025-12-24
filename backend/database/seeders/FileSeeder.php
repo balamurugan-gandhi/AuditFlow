@@ -19,19 +19,19 @@ class FileSeeder extends Seeder
         $clients = Client::all();
         $employees = User::role('employee')->get();
         $allUsers = User::all();
-        
+
         if ($clients->isEmpty()) {
             $this->command->warn('No clients found. Please seed clients first.');
             return;
         }
 
         $fileTypes = ['Income Tax', 'GST', 'Audit', 'Accounting', 'Consulting'];
-        $statuses = ['assigned', 'in-progress', 'pending-info', 'ready-to-file', 'filed', 'completed'];
+        $statuses = ['assigned', 'in-progress', 'ready-to-file', 'filed', 'completed'];
         $currentYear = date('Y');
-        
+
         // Use only current assessment year for all files
         $currentAssessmentYear = "{$currentYear}-" . ($currentYear + 1);
-        
+
         $financialYears = [
             ($currentYear - 1) . "-{$currentYear}",
             ($currentYear - 2) . "-" . ($currentYear - 1),
@@ -43,7 +43,7 @@ class FileSeeder extends Seeder
         for ($i = 0; $i < 75; $i++) {
             $status = $statuses[array_rand($statuses)];
             $assignedTo = null;
-            
+
             // Assign to employee for all statuses
             if (!$employees->isEmpty()) {
                 $assignedTo = $employees->random()->id;
@@ -57,7 +57,7 @@ class FileSeeder extends Seeder
             $assignedDate = Carbon::now()->subDays(rand(10, 60));
 
             // Set dates based on status
-            if (in_array($status, ['assigned', 'in-progress', 'pending-info', 'ready-to-file'])) {
+            if (in_array($status, ['assigned', 'in-progress', 'ready-to-file'])) {
                 $estimatedDate = Carbon::now()->addDays(rand(5, 60))->format('Y-m-d');
             }
 
@@ -94,7 +94,7 @@ class FileSeeder extends Seeder
     {
         $status = $file->status;
         $numLogs = 0;
-        
+
         // Determine number of work log entries based on status
         if (in_array($status, ['completed', 'filed'])) {
             $numLogs = rand(3, 6);  // Completed files have more logs
@@ -106,11 +106,11 @@ class FileSeeder extends Seeder
 
         $endDate = $actualDate ? Carbon::parse($actualDate) : Carbon::now();
         $daysBetween = $assignedDate->diffInDays($endDate);
-        
+
         for ($i = 0; $i < $numLogs; $i++) {
             $logDate = $assignedDate->copy()->addDays(rand(0, max(1, $daysBetween)));
             $hoursWorked = rand(1, 8) + (rand(0, 1) * 0.5);  // 1-8.5 hours
-            
+
             WorkLog::create([
                 'file_id' => $file->id,
                 'user_id' => $assignedTo,
@@ -148,11 +148,6 @@ class FileSeeder extends Seeder
                 'Currently processing tax returns',
                 'Preparing financial statements',
                 'Working on compliance requirements',
-            ],
-            'pending-info' => [
-                'Waiting for additional documents from client',
-                'Client needs to provide bank statements',
-                'Missing PAN card copy',
             ],
             'ready-to-file' => [
                 'Ready for final review and filing',

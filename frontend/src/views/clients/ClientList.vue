@@ -33,7 +33,7 @@
                 <Column header="Actions" :exportable="false" style="min-width: 8rem">
                     <template #body="slotProps">
                         <div class="flex gap-2">
-                            <Button icon="pi pi-eye" text rounded severity="secondary" @click="router.push(`/clients/${slotProps.data.id}`)" v-tooltip.top="'View'" />
+                            <Button icon="pi pi-eye" text rounded severity="secondary" @click="router.push(`/clients/${slotProps.data.id}`)" v-tooltip.top="'View'" />                            
                             <Button icon="pi pi-pencil" text rounded severity="info" @click="router.push(`/clients/${slotProps.data.id}/edit`)" v-tooltip.top="'Edit'" />
                             <Button icon="pi pi-trash" text rounded severity="danger" @click="confirmDelete(slotProps.data)" v-tooltip.top="'Delete'" :loading="deletingId === slotProps.data.id" :disabled="deletingId === slotProps.data.id" />
                         </div>
@@ -41,6 +41,53 @@
                 </Column>
             </DataTable>
         </div>
+
+        <!-- Client Notes Modal -->
+        <Dialog v-model:visible="notesModalVisible" modal header="Client Notes" :style="{ width: '50rem' }">
+            <template #header>
+                <div class="flex align-items-center gap-2">
+                    <i class="pi pi-file"></i>
+                    <span>Notes for {{ selectedClient?.business_name }}</span>
+                </div>
+            </template>
+
+            <div class="mb-4">
+                <Button label="Add Note" icon="pi pi-plus" @click="openAddNoteDialog" />
+            </div>
+
+            <DataTable :value="clientNotes" :loading="notesLoading" stripedRows :showGridlines="false" class="p-datatable-sm">
+                <template #empty>
+                    <div class="text-center p-4">
+                        <i class="pi pi-info-circle text-4xl text-surface-400 mb-4"></i>
+                        <h3 class="text-xl font-semibold text-surface-700 dark:text-surface-300 mb-2">No Notes Found</h3>
+                        <p class="text-surface-500 dark:text-surface-400">
+                            No notes have been added for this client yet.
+                        </p>
+                    </div>
+                </template>
+                <Column field="reason" header="Reason" style="min-width: 200px"></Column>
+                <Column field="user.name" header="User" style="min-width: 120px"></Column>
+                <Column field="created_at" header="Last Contacted" style="min-width: 120px">
+                    <template #body="slotProps">
+                        {{ formatDate(slotProps.data.created_at) }}
+                    </template>
+                </Column>
+            </DataTable>
+        </Dialog>
+
+        <!-- Add Note Dialog -->
+        <Dialog v-model:visible="addNoteDialogVisible" modal header="Add Note" :style="{ width: '30rem' }">
+            <div class="flex flex-column gap-4">
+                <div>
+                    <label for="reason" class="block text-sm font-medium mb-2">Reason *</label>
+                    <Textarea id="reason" v-model="noteForm.reason" rows="4" class="w-full" />
+                </div>
+            </div>
+            <template #footer>
+                <Button label="Cancel" icon="pi pi-times" text @click="addNoteDialogVisible = false" />
+                <Button label="Save" icon="pi pi-check" @click="saveNote" :loading="notesLoading" />
+            </template>
+        </Dialog>
     </div>
 </template>
 
@@ -54,6 +101,8 @@ import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
 import IconField from 'primevue/iconfield';
 import InputIcon from 'primevue/inputicon';
+import Dialog from 'primevue/dialog';
+import Textarea from 'primevue/textarea';
 import { FilterMatchMode } from '@primevue/core/api';
 
 const router = useRouter();
@@ -63,6 +112,16 @@ const filters = ref({
     global: { value: null, matchMode: FilterMatchMode.CONTAINS },
 });
 const deletingId = ref(null);
+
+// Notes modal data
+const notesModalVisible = ref(false);
+const selectedClient = ref(null);
+const clientNotes = ref([]);
+const notesLoading = ref(false);
+const addNoteDialogVisible = ref(false);
+const noteForm = ref({
+    reason: ''
+});
 
 const fetchClients = async () => {
     try {
@@ -90,6 +149,54 @@ const confirmDelete = async (client) => {
     } finally {
         deletingId.value = null;
     }
+};
+
+const openNotesModal = async (client) => {
+    selectedClient.value = client;
+    notesModalVisible.value = true;
+    await fetchClientNotes(client.id);
+};
+
+const fetchClientNotes = async (clientId) => {
+    notesLoading.value = true;
+    try {
+        const response = await api.get(`/clients/${clientId}/notes`);
+        clientNotes.value = response.data;
+    } catch (error) {
+        console.error('Error fetching client notes:', error);
+    } finally {
+        notesLoading.value = false;
+    }
+};
+
+const openAddNoteDialog = () => {
+    noteForm.value = {
+        reason: ''
+    };
+    addNoteDialogVisible.value = true;
+};
+
+const saveNote = async () => {
+    try {
+        await api.post(`/clients/${selectedClient.value.id}/notes`, noteForm.value);
+        addNoteDialogVisible.value = false;
+        await fetchClientNotes(selectedClient.value.id);
+    } catch (error) {
+        console.error('Error saving note:', error);
+    }
+};
+
+const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleString('en-IN', {
+        timeZone: 'Asia/Kolkata',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
 };
 
 onMounted(() => {

@@ -14,6 +14,7 @@ class File extends Model
         'file_type',
         'assessment_year',
         'financial_year',
+        'turnover',
         'status',
         'assigned_to',
         'estimated_completion_date',

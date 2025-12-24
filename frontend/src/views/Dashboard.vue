@@ -4,7 +4,6 @@
         <div class="mb-6">
             <div class="mb-4">
                 <h2 class="text-3xl font-bold text-surface-900 dark:text-surface-0 m-0">{{ dashboardTitle }}</h2>
-                <p class="text-surface-500 dark:text-surface-400 mt-2">Overview of your audit workflow</p>
             </div>
             
             <!-- Filters -->
@@ -42,6 +41,26 @@
                     </div>
                     <div class="card-icon-wrapper">
                         <i class="pi pi-inbox card-icon"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Unreceived Files (hide if employee filter is selected) -->
+            <div v-if="!selectedEmployee" class="dashboard-card card-gray" @click="!loading && navigateToFiles('unreceived')">
+                <div class="card-bg-pattern"></div>
+                <div class="card-content">
+                    <div>
+                        <p class="card-label">Unreceived Files</p>
+                        <h3 class="card-value" v-if="!loading">{{ stats.unreceived }}</h3>
+                        <div v-else class="skeleton-loader" style="width: 80px; height: 40px;"></div>
+                        <div class="card-percentage" v-if="!loading">
+                            <span class="percentage-badge">{{ getPercentage(stats.unreceived, true) }}%</span>
+                            <span class="percentage-text">from {{ stats.total_clients }} clients</span>
+                        </div>
+                        <div v-else class="skeleton-loader" style="width: 120px; height: 20px; margin-top: 8px;"></div>
+                    </div>
+                    <div class="card-icon-wrapper">
+                        <i class="pi pi-exclamation-triangle card-icon"></i>
                     </div>
                 </div>
             </div>
@@ -233,6 +252,7 @@ const stats = ref({
     received: 0,
     total_clients: 0,
     total_files: 0,
+    unreceived: 0,
     pending: 0,
     in_progress: 0,
     ready_to_file: 0,
@@ -265,9 +285,19 @@ const dashboardCards = computed(() => [
         isReceivedCard: true
     },
     { 
+        title: 'Unreceived Files', 
+        count: stats.value.unreceived, 
+        status: 'secondary', 
+        icon: 'pi-exclamation-triangle', 
+        gradient: 'from-gray-500 to-gray-600',
+        showPercentage: true,
+        percentageText: 'of total clients',
+        isReceivedCard: true
+    },
+    { 
         title: 'Pending Files', 
         count: stats.value.pending, 
-        status: 'pending-info', 
+        status: 'warning', 
         icon: 'pi-clock', 
         gradient: 'from-orange-500 to-red-500',
         showPercentage: true,
@@ -333,7 +363,11 @@ const fetchDashboardData = async () => {
 
         // Fetch recent files (optional: filter by year if needed, currently just recent)
         const filesRes = await api.get('/files');
-        recentFiles.value = filesRes.data.slice(0, 5);
+        const allFiles = filesRes.data;
+        recentFiles.value = allFiles.slice(0, 5);
+
+        // Update payment_received stat to match logic: status 'payment_received' and payment_id not null
+        stats.value.payment_received = allFiles.filter(f => f.status === 'payment_received' && f.payment_id !== null).length;
 
         // Fetch pending invoices
         const invoicesRes = await api.get('/invoices');
@@ -362,16 +396,13 @@ const navigateToFiles = (status) => {
         status: status, 
         year: selectedYear.value 
     };
-    
     if (selectedTimePeriod.value) {
         query.time_period = selectedTimePeriod.value;
     }
-    
-    if (status === 'payment_received') {
-        // Handle payment received filter specifically if needed, or just go to files
-        query.payment_status = 'received';
+    if (selectedEmployee.value) {
+        query.employee_id = selectedEmployee.value;
     }
-    
+    // Do NOT add payment_status for payment_received, just use status=payment_received
     router.push({ path: '/files', query });
 };
 
@@ -384,7 +415,6 @@ const getStatusSeverity = (status) => {
         'received': 'secondary',
         'assigned': 'info',
         'in-progress': 'info',
-        'pending-info': 'warning',
         'ready-to-file': 'info',
         'filed': 'success',
         'completed': 'success'

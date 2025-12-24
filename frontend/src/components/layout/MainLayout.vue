@@ -1,8 +1,8 @@
 <template>
-    <div class="main-layout">
-        <AppSidebar :collapsed="isSidebarCollapsed" />
+    <div class="main-layout flex h-screen overflow-hidden">
+        <AppSidebar :collapsed="isSidebarCollapsed" class="shrink-0" />
         
-        <div class="content-wrapper" :class="{ 'collapsed': isSidebarCollapsed }">
+        <div class="content-wrapper">
             <!-- Impersonation Banner -->
             <div v-if="authStore.isImpersonating" class="bg-orange-500 text-white px-4 py-2 flex justify-between items-center">
                 <span class="font-medium">Viewing as: {{ authStore.user?.name }}</span>
@@ -53,7 +53,7 @@ onUnmounted(() => {
 <style scoped>
 .main-layout {
     display: flex;
-    height: 100vh;
+    min-height: 100vh;
     overflow: hidden;
 }
 
@@ -61,13 +61,7 @@ onUnmounted(() => {
     flex: 1;
     display: flex;
     flex-direction: column;
-    margin-left: 260px;
     overflow: hidden;
-    transition: margin-left 0.3s ease;
-}
-
-.content-wrapper.collapsed {
-    margin-left: 80px;
 }
 
 .main-content {
@@ -75,15 +69,5 @@ onUnmounted(() => {
     overflow-y: auto;
     background: #f8f9fa;
     padding: 2rem;
-}
-
-@media (max-width: 768px) {
-    .content-wrapper {
-        margin-left: 0;
-    }
-    
-    .content-wrapper.collapsed {
-        margin-left: 0;
-    }
 }
 </style>

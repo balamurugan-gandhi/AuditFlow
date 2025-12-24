@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('client_id')->constrained()->onDelete('cascade');
             $table->string('file_type'); // Income Tax, GST, etc.
             $table->string('assessment_year');
-            $table->string('status')->default('received'); // received, assigned, in-progress, pending-info, ready-to-file, filed, completed
+            $table->string('status')->default('received'); // received, assigned, in-progress, ready-to-file, filed, completed
             $table->foreignId('assigned_to')->nullable()->constrained('users')->onDelete('set null');
             $table->date('estimated_completion_date')->nullable();
             $table->date('actual_completion_date')->nullable();

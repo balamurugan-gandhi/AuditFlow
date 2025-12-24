@@ -1,5 +1,10 @@
 <template>
-    <aside class="sidebar" :class="{ 'collapsed': collapsed }">
+    <aside
+    :class="[
+        'h-full transition-all duration-300 bg-slate-900 text-white',
+        collapsed ? 'w-20' : 'w-64'
+    ]"
+    >
         <!-- Logo Section -->
         <div class="logo-section">
             <div class="logo-icon">
@@ -88,7 +93,7 @@ const menuItems = computed(() => {
 </script>
 
 <style scoped>
-.sidebar {
+/* .sidebar {
     width: 260px;
     background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
     display: flex;
@@ -104,7 +109,7 @@ const menuItems = computed(() => {
 
 .sidebar.collapsed {
     width: 80px;
-}
+} */
 
 .logo-section {
     padding: 1.5rem;
