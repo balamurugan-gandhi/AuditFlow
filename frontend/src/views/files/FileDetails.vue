@@ -21,8 +21,28 @@
             </div>
         </div>
 
-        <!-- Actual Content -->
+        <!-- Actual Content --> 
         <div v-else-if="file" class="space-y-6 animate-fade-in">
+            <!-- Past Due Notification Flag -->
+                <div v-if="isPastDue"
+                class="flex items-center gap-3 bg-red-50 border border-red-200 rounded-lg px-4 py-2 mb-2"
+                >
+                    <i class="pi pi-exclamation-triangle text-red-600 text-xl"></i>
+                    <span class="text-red-700 font-semibold">
+                        This file is <b>past due</b>! Estimated completion was
+                        {{ pastDueDays }} day<span v-if="pastDueDays !== 1">s</span> ago.
+                    </span>
+                </div>
+                <div v-else-if="isDueSoon"
+                class="flex items-center gap-3 bg-orange-50 border border-orange-200 rounded-lg px-4 py-2 mb-2"
+                >
+                    <i class="pi pi-clock text-orange-600 text-xl"></i>
+                    <span class="text-orange-700 font-semibold">
+                        This file is due in
+                        <b>{{ dueSoonDays }}</b> day<span v-if="dueSoonDays !== 1">s</span>.
+                    </span>
+                </div>
+
             <!-- Header -->
             <div class="flex items-center gap-4">
                 <Button icon="pi pi-arrow-left" text rounded @click="router.back()" />
@@ -341,6 +361,39 @@ const logForm = ref({
     date: new Date().toISOString().split('T')[0],
     hours_worked: 1,
     description: ''
+});
+
+// No external date library needed
+// ...existing code...
+const daysDiff = computed(() => {
+    if (!file.value?.estimated_completion_date) return null;
+
+    const dueDate = new Date(file.value.estimated_completion_date);
+    if (isNaN(dueDate.getTime())) return null;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    dueDate.setHours(0, 0, 0, 0);
+
+    return Math.floor((dueDate - today) / (1000 * 60 * 60 * 24));
+});
+const isPastDue = computed(() => {
+    if (!file.value) return false;
+    if (file.value.status === 'completed' || file.value.payment_id) return false;
+    return daysDiff.value !== null && daysDiff.value < 0;
+});
+
+const pastDueDays = computed(() => {
+    return isPastDue.value ? Math.abs(daysDiff.value) : 0;
+});
+const isDueSoon = computed(() => {
+    if (!file.value) return false;
+    if (file.value.status === 'completed' || file.value.payment_id) return false;
+    return daysDiff.value !== null && daysDiff.value >= 0 && daysDiff.value <= 5;
+});
+
+const dueSoonDays = computed(() => {
+    return isDueSoon.value ? daysDiff.value : 0;
 });
 
 // File Upload State

@@ -39,6 +39,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notifications/unread-count', [\App\Http\Controllers\NotificationController::class, 'unreadCount']);
     Route::put('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead']);
 
+    // API for file due notifications
+    Route::get('/file-due-notifications', [\App\Http\Controllers\FileDueNotificationController::class, 'index']);
+
     Route::get('/settings', [\App\Http\Controllers\SettingsController::class, 'index']);
     Route::post('/settings', [\App\Http\Controllers\SettingsController::class, 'update']);
+
+    Route::get('/license/status', [\App\Http\Controllers\LicenseController::class, 'status']);
+    Route::post('/license/update', [\App\Http\Controllers\LicenseController::class, 'update']);
+    Route::post('/license/generate', [\App\Http\Controllers\LicenseController::class, 'generate']);
+
+    Route::get('/plugins', [\App\Http\Controllers\PluginController::class, 'index']);
+    Route::put('/plugins/{id}', [\App\Http\Controllers\PluginController::class, 'update']);
 });

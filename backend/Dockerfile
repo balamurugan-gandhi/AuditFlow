@@ -30,7 +30,7 @@ WORKDIR /var/www/html
 RUN useradd -G www-data,root -u 1000 -d /home/dev dev
 RUN mkdir -p /home/dev/.composer \
     && chown -R dev:dev /home/dev \
-    && mkdir -p /var/www/html/vendor /var/www/html/storage \
+    && mkdir -p /var/www/html/vendor /var/www/html/storage /var/www/html/license \
     && chown -R dev:www-data /var/www/html
 
 USER dev

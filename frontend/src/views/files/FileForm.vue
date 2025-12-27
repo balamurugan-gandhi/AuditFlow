@@ -27,10 +27,11 @@
                         <label for="file_type" class="text-sm font-medium text-surface-700 dark:text-surface-200">File Type</label>
                         <Dropdown id="file_type" v-model="form.file_type" :options="serviceTypes" placeholder="Select Type" required class="w-full" />
                     </div>
-                    <div class="flex flex-col gap-2">
-                        <label for="turnover" class="text-sm font-medium text-surface-700 dark:text-surface-200">Turnover *</label>
-                        <Dropdown id="turnover" v-model="form.turnover" :options="turnoverOptions" optionLabel="label" optionValue="key" placeholder="Select Turnover" required class="w-full" />
-                    </div>
+                        <div class="flex flex-col gap-2">
+                            <label for="turnover" class="text-sm font-medium text-surface-700 dark:text-surface-200">Turnover *</label>
+                            <Dropdown id="turnover" v-model="form.turnover" :options="turnoverOptions" optionLabel="label" optionValue="key" placeholder="Select Turnover" required class="w-full" />
+                            <span v-if="errorMessages.turnover" class="text-red-600 text-xs mt-1">{{ errorMessages.turnover }}</span>
+                        </div>
                     <div class="flex flex-col gap-2" v-if="isEditing">
                         <label for="assignee" class="text-sm font-medium text-surface-700 dark:text-surface-200">Assignee</label>
                         <template v-if="form.assigned_to">
@@ -151,8 +152,11 @@ const formatDateForApi = (date) => {
     return [year, month.padStart(2, '0'), day.padStart(2, '0')].join('-');
 };
 
+const errorMessages = ref({});
+
 const handleSubmit = async () => {
     loading.value = true;
+    errorMessages.value = {};
     try {
         const payload = { ...form.value };
         if (!isEditing.value) {
@@ -168,7 +172,13 @@ const handleSubmit = async () => {
         }
         router.push('/files');
     } catch (error) {
-        console.error('Error saving file:', error);
+        if (error.response && error.response.data && error.response.data.errors) {
+            errorMessages.value = Object.fromEntries(
+                Object.entries(error.response.data.errors).map(([field, messages]) => [field, messages[0]])
+            );
+        } else {
+            console.error('Error saving file:', error);
+        }
     } finally {
         loading.value = false;
     }

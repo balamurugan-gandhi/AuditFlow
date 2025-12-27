@@ -26,7 +26,7 @@
         </nav>
 
         <!-- User Profile Section -->
-        <div class="user-profile">
+        <!-- <div class="user-profile">
             <div class="user-avatar">
                 {{ userInitials }}
             </div>
@@ -34,7 +34,7 @@
                 <p class="user-name">{{ authStore.user?.name }}</p>
                 <p class="user-email">{{ authStore.user?.email }}</p>
             </div>
-        </div>
+        </div> -->
     </aside>
 </template>
 
@@ -86,6 +86,10 @@ const menuItems = computed(() => {
 
     if (isAdminOrManager) {
         items.push({ label: 'Settings', icon: 'pi pi-cog', to: '/settings' });
+    }
+    // Plugins menu only for Admin
+    if (isAdmin) {
+        items.push({ label: 'Plugins', icon: 'pi pi-list', to: '/plugins' });
     }
 
     return items;

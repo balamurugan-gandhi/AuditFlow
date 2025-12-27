@@ -1,0 +1,14 @@
+failed to get console mode for stdout: The handle is invalid.
+cat: unrecognized option: i
+BusyBox v1.37.0 (2025-12-16 14:19:28 UTC) multi-call binary.
+
+Usage: cat [-nbvteA] [FILE]...
+
+Print FILEs to stdout
+
+	-n	Number output lines
+	-b	Number nonempty lines
+	-v	Show nonprinting characters as ^x or M-x
+	-t	...and tabs as ^I
+	-e	...and end lines with $
+	-A	Same as -vte

@@ -25,6 +25,8 @@ api.interceptors.response.use(response => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         router.push('/login');
+    } else if (error.response && error.response.status === 402) {
+        router.push('/license-expired');
     }
     return Promise.reject(error);
 });

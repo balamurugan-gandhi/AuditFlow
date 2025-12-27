@@ -8,6 +8,10 @@ import BadgeDirective from 'primevue/badgedirective';
 import OverlayPanel from 'primevue/overlaypanel';
 import Avatar from 'primevue/avatar';
 
+const goToFile = (id) => {
+    window.location.href = `/files/${id}`;
+};
+
 const vBadge = BadgeDirective;
 
 const route = useRoute();
@@ -16,6 +20,10 @@ const authStore = useAuthStore();
 
 const notificationCount = ref(0);
 const notifications = ref([]);
+const fileDueNotifications = ref([]); // Now an array of file objects
+const totalNotificationCount = computed(() => {
+    return notificationCount.value + (fileDueNotifications.value.length || 0);
+});
 const op = ref();
 const companySettings = ref({});
 
@@ -39,12 +47,15 @@ const companyLogo = computed(() => {
 
 const fetchNotifications = async () => {
     try {
-        const [countRes, listRes] = await Promise.all([
+        const [countRes, listRes, fileDueRes] = await Promise.all([
             api.get('/notifications/unread-count'),
-            api.get('/notifications')
+            api.get('/notifications'),
+            api.get('/file-due-notifications')
         ]);
         notificationCount.value = countRes.data.count;
         notifications.value = listRes.data;
+        let dueList = Array.isArray(fileDueRes.data) ? fileDueRes.data.flat() : [];
+        fileDueNotifications.value = dueList;
     } catch (error) {
         console.error('Error fetching notifications:', error);
     }
@@ -105,7 +116,11 @@ onMounted(() => {
 
         <div class="topbar-right">
             <!-- Notifications -->
-            <button class="icon-button" @click="toggleNotifications" v-badge.danger="notificationCount > 0 ? notificationCount : null">
+            <button
+            class="icon-button"
+            @click="toggleNotifications"
+            v-badge.danger="totalNotificationCount > 9 ? '9+' : totalNotificationCount || null"
+            >
                 <i class="pi pi-bell"></i>
             </button>
 
@@ -124,9 +139,9 @@ onMounted(() => {
             <div class="notifications-panel">
                 <div class="notifications-header">
                     <h3>Notifications</h3>
-                    <span class="badge">{{ notificationCount }}</span>
+                    <span class="badge">{{ totalNotificationCount }}</span>
                 </div>
-                <div v-if="notifications.length === 0" class="no-notifications">
+                <div v-if="notifications.length === 0 && fileDueNotifications.length === 0" class="no-notifications">
                     <i class="pi pi-inbox"></i>
                     <p>No notifications</p>
                 </div>
@@ -138,6 +153,33 @@ onMounted(() => {
                         <div class="notification-content">
                             <p class="notification-message">{{ notif.data.message }}</p>
                             <p class="notification-time">{{ formatDateIST(notif.created_at) }}</p>
+                        </div>
+                    </div>
+                    <!-- File Due Notifications -->
+                    <div v-for="file in fileDueNotifications" :key="file.id" class="notification-item clickable" @click="goToFile(file.id)">
+                        <div class="notification-icon" :style="file.is_overdue ? 'background: #dc2626;' : 'background: #f59e42;'">
+                            <i :class="file.is_overdue ? 'pi pi-exclamation-triangle' : 'pi pi-clock'"></i>
+                        </div>
+                        <div class="notification-content">
+                            <template v-if="file.is_overdue">
+                                <p class="notification-message">
+                                    File <b>{{ file.name }}</b> is
+                                    <span style="color:#dc2626">past due</span>!
+                                </p>
+                                <p class="notification-time">
+                                    Due {{ file.days_overdue }} day<span v-if="file.days_overdue !== 1">s</span> ago
+                                </p>
+                            </template>
+
+                            <template v-else>
+                                <p class="notification-message">
+                                    File <b>{{ file.name }}</b> is due in
+                                    <span style="color:#f59e42">{{ file.days_left }} day<span v-if="file.days_left !== 1">s</span></span>
+                                </p>
+                                <p class="notification-time">
+                                    Estimated completion: {{ file.due_date }}
+                                </p>
+                            </template>
                         </div>
                     </div>
                 </div>
@@ -256,7 +298,7 @@ onMounted(() => {
     flex-direction: column;
     background: white;
     border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    /* box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15); */
 }
 
 .notifications-header {
@@ -311,6 +353,13 @@ onMounted(() => {
     padding: 1rem;
     border-bottom: 1px solid #f1f5f9;
     transition: background 0.2s;
+}
+
+.notification-item.clickable {
+    cursor: pointer;
+}
+.notification-item.clickable:hover {
+    background: #f3f4f6;
 }
 
 .notification-item:hover {

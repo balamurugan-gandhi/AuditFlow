@@ -123,4 +123,12 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | License Configuration
+    |--------------------------------------------------------------------------
+    */
+    'initial_license_key' => env('INITIAL_LICENSE_KEY'),
+    'auto_generate_license' => env('AUTO_GENERATE_LICENSE', true),
+
 ];

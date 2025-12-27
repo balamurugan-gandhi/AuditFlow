@@ -18,14 +18,6 @@ class SettingsController extends Controller
     {
         $data = [];
 
-        // return response()->json([
-        //     '_FILES' => $_FILES,
-        //     'all' => $request->all(),
-        //     'content_type' => $request->header('content-type'),
-        // ]);
-
-        //return response()->json(['message' => 'Settings saved successfully', 'data' => $request->file('company_logo')]);
-
         // Handle WhatsApp settings from nested 'settings' object
         if ($request->has('settings')) {
             $settings = $request->input('settings');
@@ -42,7 +34,11 @@ class SettingsController extends Controller
             'company_email',
             'company_phone',
             'company_whatsapp',
-            'company_address'
+            'company_address',
+            'gst_number',
+            'pan_number',
+            'tan_number',
+            'license_number'
         ];
 
         foreach ($companyFields as $field) {

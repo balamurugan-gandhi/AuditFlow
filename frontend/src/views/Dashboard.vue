@@ -16,10 +16,10 @@
                     <i class="pi pi-calendar text-surface-600 dark:text-surface-400"></i>
                     <Dropdown v-model="selectedYear" :options="assessmentYears" placeholder="Select Year" class="w-64" @change="fetchDashboardData" />
                 </div>
-                <div class="flex items-center gap-2">
+                <!-- <div class="flex items-center gap-2">
                     <i class="pi pi-clock text-surface-600 dark:text-surface-400"></i>
                     <Dropdown v-model="selectedTimePeriod" :options="timePeriods" optionLabel="label" optionValue="value" placeholder="Select Period" class="w-64" showClear @change="fetchDashboardData" />
-                </div>
+                </div> -->
             </div>
         </div>
 

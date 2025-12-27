@@ -1,31 +1,36 @@
 services:
   app:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
     image: auditflow-app:latest
     container_name: auditflow-app
     restart: unless-stopped
-    user: "1000:1000"
-    working_dir: /var/www/html
+    expose:
+      - "9000"
     environment:
       APP_ENV: production
       APP_DEBUG: "false"
     volumes:
       - ./docker/php/custom.ini:/usr/local/etc/php/conf.d/custom.ini
       - ./files/tmp:/tmp
+      - auditflow_license:/var/www/html/license
+      - auditflow_storage:/var/www/html/storage/app/public
     networks:
       - auditflow-network
     depends_on:
       - db
       - redis
-
   nginx:
-    image: nginx:alpine
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
     container_name: auditflow-nginx
     restart: unless-stopped
-    ports:
-      - "80:80"
     volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      # static assets already baked into image or Laravel public/
+      - auditflow_storage:/var/www/html/storage/app/public
+    ports:
+      - "8080:80"    
     networks:
       - auditflow-network
     depends_on:
@@ -58,8 +63,11 @@ services:
     image: auditflow-app:latest
     container_name: auditflow-worker
     restart: unless-stopped
+    user: www-data
     command: php artisan queue:work --sleep=3 --tries=3
-    user: "1000:1000"
+    volumes:
+      - auditflow_license:/var/www/html/license
+      - auditflow_storage:/var/www/html/storage/app/public
     networks:
       - auditflow-network
     depends_on:
@@ -71,8 +79,11 @@ services:
     image: auditflow-app:latest
     container_name: auditflow-scheduler
     restart: unless-stopped
+    user: www-data
     command: php artisan schedule:work
-    user: "1000:1000"
+    volumes:     
+      - auditflow_license:/var/www/html/license
+      - auditflow_storage:/var/www/html/storage/app/public
     networks:
       - auditflow-network
     depends_on:
@@ -87,3 +98,5 @@ networks:
 volumes:
   db_data:
   redis_data:
+  auditflow_license:
+  auditflow_storage:

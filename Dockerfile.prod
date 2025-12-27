@@ -1,0 +1,87 @@
+FROM php:8.3-fpm
+
+# ------------------------------
+# System dependencies
+# ------------------------------
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    libzip-dev \
+    zip \
+    unzip \
+    default-mysql-client \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# ------------------------------
+# PHP extensions
+# ------------------------------
+RUN docker-php-ext-install \
+    pdo_mysql \
+    mbstring \
+    exif \
+    pcntl \
+    bcmath \
+    gd \
+    zip \
+    opcache
+
+RUN pecl install redis && docker-php-ext-enable redis
+
+# ------------------------------
+# OPcache
+# ------------------------------
+COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
+
+WORKDIR /var/www/html
+
+# ------------------------------
+# Install Composer
+# ------------------------------
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# ------------------------------
+# Copy Laravel source
+# ------------------------------
+COPY backend/ .
+
+# ------------------------------
+# Copy composer files first
+# ------------------------------
+#COPY backend/composer.json backend/composer.lock ./
+
+# ------------------------------
+# Install PHP dependencies (PRODUCTION)
+# ------------------------------
+RUN composer install \
+    --no-dev \
+    --optimize-autoloader \
+    --classmap-authoritative \
+    --no-interaction \
+    --no-progress
+
+
+# ------------------------------
+# Copy pre-built frontend assets
+# ------------------------------
+COPY frontend/dist ./public
+
+# ------------------------------
+# Permissions
+# ------------------------------
+RUN mkdir -p \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/framework/cache \
+    bootstrap/cache \
+    license \
+    && chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 storage bootstrap/cache license
+
+# ------------------------------
+# PHP-FPM
+# ------------------------------
+EXPOSE 9000
+CMD ["php-fpm"]

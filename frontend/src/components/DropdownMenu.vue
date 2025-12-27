@@ -1,34 +1,50 @@
 <template>
-  <div class="relative" ref="root">
+  <div class="relative inline-block" ref="root">
     <Button icon="pi pi-ellipsis-v" text rounded @click="toggleMenu" />
-    <div v-if="visible" class="dropdown-menu-popup" :class="menuDirection">
-      <ul>
-        <template v-for="(option, idx) in options">
-          <li
-            v-if="option.action !== 'delete'"
-            :key="option.label"
-            class="dropdown-menu-item"
-            @click="select(option)"
-          >
-            <i :class="option.icon + ' dropdown-menu-icon'" />
-            <span>{{ option.label }}</span>
-          </li>
-          <li v-else :key="option.label">
-            <div class="dropdown-menu-divider"></div>
-            <div class="dropdown-menu-item dropdown-menu-delete" @click="select(option)">
+
+    <Teleport to="body">
+      <div
+        v-if="visible"
+        ref="menuRef"
+        class="dropdown-menu-popup"
+        :class="menuDirection"
+        :style="menuStyle"
+        @mousedown.stop
+      >
+        <ul>
+          <template v-for="option in options" :key="option.label">
+            <li
+              v-if="option.action !== 'delete'"
+              class="dropdown-menu-item"
+              @click="select(option)"
+            >
               <i :class="option.icon + ' dropdown-menu-icon'" />
               <span>{{ option.label }}</span>
-            </div>
-          </li>
-        </template>
-      </ul>
-    </div>
+            </li>
+
+            <li v-else>
+              <div class="dropdown-menu-divider"></div>
+              <div
+                class="dropdown-menu-item dropdown-menu-delete"
+                @click="select(option)"
+              >
+                <i :class="option.icon + ' dropdown-menu-icon'" />
+                <span>{{ option.label }}</span>
+              </div>
+            </li>
+          </template>
+        </ul>
+      </div>
+    </Teleport>
   </div>
 </template>
+
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import Button from 'primevue/button';
+const menuStyle = ref({});
+const menuRef = ref(null);
 
 const props = defineProps({
   options: Array,
@@ -44,24 +60,40 @@ function closeAllDropdowns(e) {
   visible.value = false;
 }
 
-function getMenuDirection() {
-  // Try to open upwards if not enough space below
-  const rootEl = root.value;
-  if (!rootEl) return '';
-  const rect = rootEl.getBoundingClientRect();
-  const spaceBelow = window.innerHeight - rect.bottom;
-  const spaceAbove = rect.top;
-  // If less than 250px below and more above, open upwards
-  return (spaceBelow < 250 && spaceAbove > spaceBelow) ? 'upwards' : '';
+function handleScroll() {
+  visible.value = false;
 }
 
 function openDropdown() {
   window.dispatchEvent(new CustomEvent('dropdownmenu:open', { detail: id }));
+
+  visible.value = true;
+
   nextTick(() => {
-    menuDirection.value = getMenuDirection();
-    visible.value = true;
+    const rootRect = root.value.getBoundingClientRect();
+    const menuEl = menuRef.value;
+
+    if (!menuEl) return;
+
+    const menuHeight = menuEl.offsetHeight;
+    const spaceBelow = window.innerHeight - rootRect.bottom;
+    const spaceAbove = rootRect.top;
+
+    const openUpwards = spaceBelow < menuHeight && spaceAbove > spaceBelow;
+
+    menuDirection.value = openUpwards ? 'upwards' : '';
+
+    menuStyle.value = {
+      position: 'absolute',
+      top: openUpwards
+        ? `${rootRect.top + window.scrollY - menuHeight - 8}px`
+        : `${rootRect.bottom + window.scrollY + 8}px`,
+      left: `${rootRect.right + window.scrollX - menuEl.offsetWidth}px`,
+      zIndex: 9999
+    };
   });
 }
+
 
 function toggleMenu() {
   if (!visible.value) {
@@ -85,28 +117,24 @@ function handleGlobalOpen(e) {
 onMounted(() => {
   document.addEventListener('mousedown', closeAllDropdowns);
   window.addEventListener('dropdownmenu:open', handleGlobalOpen);
+  window.addEventListener('scroll', handleScroll, true);
 });
 onBeforeUnmount(() => {
   document.removeEventListener('mousedown', closeAllDropdowns);
   window.removeEventListener('dropdownmenu:open', handleGlobalOpen);
+  window.removeEventListener('scroll', handleScroll, true);
 });
 </script>
 
 <style scoped>
 .dropdown-menu-popup {
-  position: absolute;
-  z-index: 10;
-  right: 0;
-  margin-top: 0.5rem;
   width: 12rem;
-  background: var(--surface-0, #fff);
-  border: 1px solid var(--surface-200, #e5e7eb);
+  background: #fff;
+  border: 1px solid #e5e7eb;
   border-radius: 0.75rem;
-  box-shadow: 0 4px 24px 0 rgba(0,0,0,0.10);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
   padding: 0.5rem 0;
-  animation: fadeIn 0.15s;
-  /* Add max-height and scroll for overflow */
-  max-height: 300px;
+  max-height: 200px;
   overflow-y: auto;
 }
 

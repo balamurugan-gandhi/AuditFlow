@@ -173,7 +173,7 @@
                     <h3 class="text-lg font-bold text-surface-900 dark:text-surface-0 mb-4">Notification Settings</h3>
                     
                     <div class="space-y-4">
-                        <div class="flex items-center justify-between p-3 bg-surface-50 dark:bg-surface-900 rounded-lg">
+                        <div v-if="whatsappPluginEnabled" class="flex items-center justify-between p-3 bg-surface-50 dark:bg-surface-900 rounded-lg">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400">
                                     <i class="pi pi-whatsapp text-lg"></i>
@@ -283,7 +283,17 @@ const getStatusSeverity = (status) => {
     return severityMap[status] || 'secondary';
 };
 
-onMounted(() => {
+const whatsappPluginEnabled = ref(false);
+
+onMounted(async () => {
     fetchClient();
+
+    try {
+        const res = await api.get('/plugins');
+        const plugin = res.data.find(p => p.name === 'whatsapp-meta');
+        whatsappPluginEnabled.value = !!(plugin && plugin.enabled);
+    } catch (e) {
+        whatsappPluginEnabled.value = false;
+    }
 });
 </script>

@@ -10,6 +10,12 @@ const routes = [
         meta: { guest: true }
     },
     {
+        path: '/license-expired',
+        name: 'LicenseExpired',
+        component: () => import('../views/LicenseExpired.vue'),
+        meta: { public: true }
+    },
+    {
         path: '/',
         component: MainLayout,
         meta: { requiresAuth: true },
@@ -37,6 +43,18 @@ const routes = [
                 name: 'ClientEdit',
                 component: () => import('../views/clients/ClientForm.vue'),
                 meta: { title: 'Edit Client', requiresAdminOrManager: true }
+            },
+            {
+                path: 'plugins',
+                name: 'Plugins',
+                component: () => import('../views/Plugins.vue'),
+                meta: { title: 'Plugins', requiresAdmin: true }
+            },
+            {
+                path: 'plugins/whatsapp-meta',
+                name: 'WhatsappMeta',
+                component: () => import('../views/WhatsappMeta.vue'),
+                meta: { title: 'WhatsApp Meta API', requiresAdmin: true }
             },
             {
                 path: 'clients/:id',
@@ -134,7 +152,9 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
     const token = localStorage.getItem('token');
 
-    if (to.meta.requiresAuth && !token) {
+    if (to.meta.public) {
+        next();
+    } else if (to.meta.requiresAuth && !token) {
         next('/login');
     } else if (to.meta.guest && token) {
         next('/');

@@ -1,0 +1,29 @@
+.git
+.gitignore
+.dockerignore
+
+# Node / PHP deps (built in container)
+node_modules
+frontend/node_modules
+backend/node_modules
+vendor
+backend/vendor
+
+# Runtime / secrets
+.env
+.env.*
+! .env.example
+
+# Logs & runtime cache
+backend/storage/logs
+backend/storage/framework/cache
+backend/storage/framework/sessions
+backend/storage/framework/views
+
+# Local-only data
+files
+storage_backup
+tests
+
+# OS junk
+.DS_Store

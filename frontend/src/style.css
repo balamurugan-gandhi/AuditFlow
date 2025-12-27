@@ -161,3 +161,29 @@
     scrollbar-width: thin;
     scrollbar-color: #475569 #1e293b;
 }
+
+/* Fix PrimeVue overlay badge inside icon button */
+.icon-button.p-overlay-badge {
+    position: relative;
+}
+
+.icon-button.p-overlay-badge .p-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+
+    min-width: 18px;
+    height: 18px;
+    line-height: 18px;
+
+    font-size: 0.65rem;
+    padding: 0;
+    border-radius: 999px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgb(248, 1, 1);
+    box-shadow: 0 0 0 2px rgb(248, 1, 1); /* nice ring */
+    color: white;
+}
