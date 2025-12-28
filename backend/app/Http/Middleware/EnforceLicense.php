@@ -28,6 +28,7 @@ class EnforceLicense
             
             // Define list of "safe" routes that are always accessible even with invalid license
             $safeRoutes = [
+                'login',
                 'dashboard/stats',  // Needed to show license status on home page
                 'settings',         // Needed to see license hash and owner
                 'logout',

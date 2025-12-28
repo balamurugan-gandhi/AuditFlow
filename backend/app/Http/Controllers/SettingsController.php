@@ -26,6 +26,8 @@ class SettingsController extends Controller
                 'expires_at' => $this->license->expiresAt(),
                 'license_id' => $this->license->getLicenseId(),
                 'features' => $this->license->getFeatures(),
+                'machine_id' => $this->license->getLicenseMachineId(),
+                'current_machine_id' => $this->license->getMachineHash(),
                 'error' => $this->license->getError(),
             ]
         ]);

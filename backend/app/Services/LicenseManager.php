@@ -68,6 +68,16 @@ class LicenseManager
                 return;
             }
 
+            // Verify Machine ID if locked
+            $licenseMachineHash = $data['machine_id'] ?? null;
+            if ($licenseMachineHash) {
+                $currentMachineHash = $this->getMachineHash();
+                if ($licenseMachineHash !== $currentMachineHash) {
+                    $this->error = "License is not valid for this machine.";
+                    return;
+                }
+            }
+
             $this->licenseData = $data;
             $this->isValid = true;
         } catch (Exception $e) {
@@ -126,6 +136,53 @@ class LicenseManager
     public function getFeatures(): array
     {
         return $this->licenseData['features'] ?? [];
+    }
+
+    /**
+     * Get the machine ID (Raw from mounted secret file).
+     */
+    public function getMachineId(): string
+    {
+        // Path to the mounted host machine ID (more secure than .env)
+        // In Docker, this should be mapped from the host
+        $path = base_path('secrets/machine_id.txt');
+        
+        if (File::exists($path)) {
+            return trim(File::get($path));
+        }
+
+        // Fallback for native Windows development (non-docker)
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            try {
+                $command = 'powershell.exe -Command "(Get-ItemProperty -Path HKLM:\SOFTWARE\Microsoft\Cryptography).MachineGuid"';
+                $guid = shell_exec($command);
+                if ($guid) return trim($guid);
+            } catch (Exception $e) {}
+        }
+        
+        return 'unknown';
+    }
+
+    /**
+     * Get a secure hash of the machine ID.
+     * This is what is actually stored in the license file.
+     */
+    public function getMachineHash(?string $rawId = null): string
+    {
+        $id = $rawId ?: $this->getMachineId();
+        if ($id === 'unknown') return 'unknown';
+
+        // Use APP_KEY as a pepper for the hash to make it unique to this app instance
+        $salt = config('app.key');
+        return hash_hmac('sha256', $id, $salt);
+    }
+
+    /**
+     * Get the license machine hash requirement.
+     */
+    public function getLicenseMachineId(): ?string
+    {
+        return $this->licenseData['machine_id'] ?? null;
     }
 
     /**

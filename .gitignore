@@ -7,7 +7,8 @@ vendor/
 .env.local
 .env.*.local
 # License Security
-/secrets/
+/secrets/private_key.pem
+/secrets/public_key.pem
 /backend/scripts/license_generator.php
 /generate_keys.php
 #/backend/license/license.lic

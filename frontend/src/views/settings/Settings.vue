@@ -115,6 +115,38 @@
                             {{ licenseInfo.license_id || 'N/A' }}
                         </div>
                     </div>
+                    <div class="p-4 bg-surface-50 dark:bg-surface-900 rounded-lg border border-surface-100 dark:border-surface-700">
+                        <span class="text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider">Machine Lock</span>
+                        <div v-if="licenseInfo.machine_id" class="flex items-center gap-2 mt-1 font-mono text-sm text-surface-700 dark:text-surface-300">
+                            <i class="pi pi-lock text-primary-500"></i>
+                            {{ licenseInfo.machine_id }}
+                        </div>
+                        <div v-else class="flex items-center gap-2 mt-1 text-sm text-surface-500 italic">
+                            <i class="pi pi-unlock text-surface-400"></i>
+                            Not hardware locked
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Current Machine ID for licensing -->
+                <div class="p-4 bg-primary-50/30 dark:bg-primary-500/5 border border-primary-100 dark:border-primary-900/30 rounded-lg flex items-center justify-between gap-4 mt-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-lg bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
+                            <i class="pi pi-desktop text-primary-600 dark:text-primary-400"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs font-semibold text-primary-700 dark:text-primary-300 uppercase tracking-wider">Your Machine ID</span>
+                            <div class="font-mono text-sm text-surface-700 dark:text-surface-300 mt-0.5">{{ licenseInfo.current_machine_id || 'Generating...' }}</div>
+                        </div>
+                    </div>
+                    <Button 
+                        icon="pi pi-copy" 
+                        text 
+                        rounded 
+                        v-tooltip="'Copy Machine ID'" 
+                        @click="copyToClipboard(licenseInfo.current_machine_id)"
+                        class="text-primary-600 dark:text-primary-400"
+                    />
                 </div>
 
                 <div class="flex flex-wrap gap-2 mt-2">
@@ -190,6 +222,12 @@ const companyInfo = ref({
 
 const logoPreview = ref('');
 const logoFile = ref(null);
+
+const copyToClipboard = (text) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    toast.add({ severity: 'info', summary: 'Copied', detail: 'Machine ID copied to clipboard', life: 2000 });
+};
 
 function clearLogo() {
     logoPreview.value = '';
