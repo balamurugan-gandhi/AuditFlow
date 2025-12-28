@@ -48,6 +48,19 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 COPY backend/ .
 
 # ------------------------------
+# Permissions
+# ------------------------------
+RUN mkdir -p \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/framework/cache \
+    bootstrap/cache \
+    license \
+    && chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 storage bootstrap/cache license
+
+
+# ------------------------------
 # Copy composer files first
 # ------------------------------
 #COPY backend/composer.json backend/composer.lock ./
@@ -67,18 +80,6 @@ RUN composer install \
 # Copy pre-built frontend assets
 # ------------------------------
 COPY frontend/dist ./public
-
-# ------------------------------
-# Permissions
-# ------------------------------
-RUN mkdir -p \
-    storage/framework/sessions \
-    storage/framework/views \
-    storage/framework/cache \
-    bootstrap/cache \
-    license \
-    && chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 storage bootstrap/cache license
 
 # ------------------------------
 # PHP-FPM
