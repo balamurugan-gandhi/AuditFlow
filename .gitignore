@@ -18,7 +18,7 @@ vendor/
 /backend/public/storage
 
 # Frontend build
-/frontend/dist/
+#/frontend/dist/
 /frontend/.vite/
 /frontend/.nuxt/
 /frontend/.output/
