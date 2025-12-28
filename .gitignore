@@ -6,6 +6,12 @@ vendor/
 .env
 .env.local
 .env.*.local
+# License Security
+/secrets/
+/backend/scripts/license_generator.php
+/generate_keys.php
+#/backend/license/license.lic
+/licensesetup.md
 
 # Laravel
 /backend/storage/*.key
@@ -16,6 +22,7 @@ vendor/
 /backend/bootstrap/cache/*
 /backend/public/hot
 /backend/public/storage
+/backend/license/
 
 # Frontend build
 #/frontend/dist/

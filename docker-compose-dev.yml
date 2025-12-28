@@ -13,7 +13,6 @@ services:
       - backend_vendor:/var/www/html/vendor
       - ./docker/php/custom.ini:/usr/local/etc/php/conf.d/custom.ini
       - ./files/tmp:/tmp
-      - ./backend/license:/var/www/html/license
     networks:
       - auditflow-network
     depends_on:
@@ -96,7 +95,6 @@ services:
       - backend_vendor:/var/www/html/vendor
       - ./docker/php/custom.ini:/usr/local/etc/php/conf.d/custom.ini
       - ./files/tmp:/tmp
-      - ./backend/license:/var/www/html/license
       # - backend_storage:/var/www/html/storage
     networks:
       - auditflow-network
@@ -120,7 +118,6 @@ services:
       - backend_vendor:/var/www/html/vendor
       - ./docker/php/custom.ini:/usr/local/etc/php/conf.d/custom.ini
       - ./files/tmp:/tmp
-      - ./backend/license:/var/www/html/license
       # - backend_storage:/var/www/html/storage
     networks:
       - auditflow-network

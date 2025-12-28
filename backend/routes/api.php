@@ -45,10 +45,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/settings', [\App\Http\Controllers\SettingsController::class, 'index']);
     Route::post('/settings', [\App\Http\Controllers\SettingsController::class, 'update']);
 
-    Route::get('/license/status', [\App\Http\Controllers\LicenseController::class, 'status']);
-    Route::post('/license/update', [\App\Http\Controllers\LicenseController::class, 'update']);
-    Route::post('/license/generate', [\App\Http\Controllers\LicenseController::class, 'generate']);
-
     Route::get('/plugins', [\App\Http\Controllers\PluginController::class, 'index']);
     Route::put('/plugins/{id}', [\App\Http\Controllers\PluginController::class, 'update']);
 });

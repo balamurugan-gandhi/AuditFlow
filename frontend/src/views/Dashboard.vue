@@ -1,5 +1,18 @@
 <template>
     <div class="dashboard">
+        <Toast />
+        
+        <!-- License Warning Banner -->
+        <div v-if="stats.license && !stats.license.is_valid" class="mb-6 p-4 bg-red-100 border-l-4 border-red-500 text-red-700 rounded shadow-sm flex items-center justify-between">
+            <div class="flex items-center">
+                <i class="pi pi-exclamation-triangle mr-3 text-xl"></i>
+                <div>
+                    <p class="font-bold m-0">License Restricted Content</p>
+                    <p class="text-sm m-0">Application access is limited. {{ stats.license.error || 'Please contact Klock Technologies.' }}</p>
+                </div>
+            </div>
+            <Button label="View License" severity="danger" size="small" outlined @click="$router.push('/settings')" />
+        </div>
         <!-- Header Section -->
         <div class="mb-6">
             <div class="mb-4">
@@ -212,10 +225,13 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Tag from 'primevue/tag';
 import Button from 'primevue/button';
+import Toast from 'primevue/toast';
+import { useToast } from 'primevue/usetoast';
 
 const authStore = useAuthStore();
 const router = useRouter();
 const loading = ref(false);
+const toast = useToast();
 
 const dashboardTitle = computed(() => {
     if (authStore.isAdmin) {
@@ -374,6 +390,14 @@ const fetchDashboardData = async () => {
         pendingInvoices.value = (invoicesRes.data || []).filter(i => i.status === 'unpaid').slice(0, 5);
     } catch (error) {
         console.error('Error fetching dashboard data:', error);
+        if (error.response && error.response.status === 402) {
+            toast.add({ 
+                severity: 'error', 
+                summary: 'License Required', 
+                detail: 'Some features are disabled due to invalid license.', 
+                life: 5000 
+            });
+        }
     } finally {
         loading.value = false;
     }

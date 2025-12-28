@@ -25,8 +25,12 @@ api.interceptors.response.use(response => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         router.push('/login');
-    } else if (error.response && error.response.status === 402) {
-        router.push('/license-expired');
+    }
+
+    if (error.response && error.response.status === 402) {
+        // License error - the middleware blocks the API
+        // We can handle this globally or per-view. 
+        // For now, let's just reject and let the view handle it.
     }
     return Promise.reject(error);
 });

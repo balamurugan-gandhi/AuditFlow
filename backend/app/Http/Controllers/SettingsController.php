@@ -8,10 +8,27 @@ use Illuminate\Http\JsonResponse;
 
 class SettingsController extends Controller
 {
+    protected $license;
+
+    public function __construct(\App\Services\LicenseManager $license)
+    {
+        $this->license = $license;
+    }
+
     public function index(): JsonResponse
     {
-        $settings = Setting::all()->pluck('value', 'key');
-        return response()->json($settings);
+        $settings = Setting::all()->pluck('value', 'key');        
+        return response()->json([
+            'settings' => $settings,
+            'license' => [
+                'is_valid' => $this->license->isValid(),
+                'issued_to' => $this->license->issuedTo(),
+                'expires_at' => $this->license->expiresAt(),
+                'license_id' => $this->license->getLicenseId(),
+                'features' => $this->license->getFeatures(),
+                'error' => $this->license->getError(),
+            ]
+        ]);
     }
 
     public function update(Request $request): JsonResponse

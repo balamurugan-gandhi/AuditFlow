@@ -8,13 +8,29 @@ use Illuminate\Database\Eloquent\Collection;
 
 class FileRepository implements FileRepositoryInterface
 {
+    protected $license;
+
+    public function __construct(\App\Services\LicenseManager $license)
+    {
+        $this->license = $license;
+    }
+
+    protected function enforceLicense()
+    {
+        if (!$this->license->isValid()) {
+            throw new \Exception("Core data access denied: Invalid License.");
+        }
+    }
+
     public function all(): Collection
     {
+        $this->enforceLicense();
         return File::with(['client', 'assignee'])->get();
     }
 
     public function allForUser(\App\Models\User $user): Collection
     {
+        $this->enforceLicense();
         if ($user->hasRole('admin') || $user->hasRole('manager')) {
             return $this->all();
         }
@@ -38,11 +54,13 @@ class FileRepository implements FileRepositoryInterface
 
     public function find(int $id): ?File
     {
+        $this->enforceLicense();
         return File::with(['client', 'assignee'])->find($id);
     }
 
     public function create(array $data): File
     {
+        $this->enforceLicense();
         return File::create($data);
     }
 
@@ -90,6 +108,7 @@ class FileRepository implements FileRepositoryInterface
 
     public function getStats(?string $assessmentYear, \App\Models\User $user, ?int $employeeId = null, ?string $timePeriod = null): array
     {
+        $this->enforceLicense();
         $query = File::query();
 
         // Apply RBAC
@@ -175,6 +194,7 @@ class FileRepository implements FileRepositoryInterface
 
     public function getRecentFiles(int $limit, \App\Models\User $user): Collection
     {
+        $this->enforceLicense();
         $query = File::with(['client', 'assignee']);
 
         // Apply same RBAC as getStats

@@ -14,7 +14,7 @@ services:
     volumes:
       - ./docker/php/custom.ini:/usr/local/etc/php/conf.d/custom.ini
       - ./files/tmp:/tmp
-      - auditflow_license:/var/www/html/license
+      - auditflow_license:/var/www/html/storage/app/license
       - auditflow_storage:/var/www/html/storage/app/public
     networks:
       - auditflow-network
@@ -30,7 +30,7 @@ services:
     volumes:
       - auditflow_storage:/var/www/html/storage/app/public
     ports:
-      - "8080:80"    
+      - "8080:80"
     networks:
       - auditflow-network
     depends_on:
@@ -66,7 +66,7 @@ services:
     user: www-data
     command: php artisan queue:work --sleep=3 --tries=3
     volumes:
-      - auditflow_license:/var/www/html/license
+      - auditflow_license:/var/www/html/storage/app/license
       - auditflow_storage:/var/www/html/storage/app/public
     networks:
       - auditflow-network
@@ -81,8 +81,8 @@ services:
     restart: unless-stopped
     user: www-data
     command: php artisan schedule:work
-    volumes:     
-      - auditflow_license:/var/www/html/license
+    volumes:
+      - auditflow_license:/var/www/html/storage/app/license
       - auditflow_storage:/var/www/html/storage/app/public
     networks:
       - auditflow-network

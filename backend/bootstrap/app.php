@@ -14,7 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->api(prepend: [
             \Illuminate\Http\Middleware\HandleCors::class,
-            \App\Http\Middleware\CheckLicense::class,
+            \App\Http\Middleware\EnforceLicense::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

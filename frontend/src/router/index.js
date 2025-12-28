@@ -10,12 +10,6 @@ const routes = [
         meta: { guest: true }
     },
     {
-        path: '/license-expired',
-        name: 'LicenseExpired',
-        component: () => import('../views/LicenseExpired.vue'),
-        meta: { public: true }
-    },
-    {
         path: '/',
         component: MainLayout,
         meta: { requiresAuth: true },

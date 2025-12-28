@@ -75,46 +75,54 @@
             </form>
         </div>
 
-
-        <!-- Application License -->
+        <!-- License Information -->
         <div class="card bg-white dark:bg-surface-800 rounded-xl shadow-sm p-6 border border-surface-200 dark:border-surface-700">
             <div class="grid grid-cols-[auto_1fr] items-center gap-4 mb-6">
                 <div class="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-500/10 flex items-center justify-center">
-                    <i class="pi pi-key text-purple-500 text-xl"></i>
+                    <i class="pi pi-verified text-purple-500 text-xl"></i>
                 </div>
                 <div>
-                    <h3 class="text-lg font-semibold text-surface-900 dark:text-surface-0 m-0 leading-tight">Application Licensed with Klock Techlogies</h3>
-                    <p class="text-surface-500 dark:text-surface-400 text-sm mt-1 mb-0">Manage your AuditFlow application license.</p>
+                    <h3 class="text-lg font-semibold text-surface-900 dark:text-surface-0 m-0 leading-tight">License Information</h3>
+                    <p class="text-surface-500 dark:text-surface-400 text-sm mt-1 mb-0">AuditFlow Application License Details</p>
                 </div>
             </div>
+            <div v-if="licenseInfo" class="space-y-4">
+                <div v-if="!licenseInfo.is_valid && licenseInfo.error" class="p-4 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm">
+                    <i class="pi pi-exclamation-triangle mr-2"></i>
+                    {{ licenseInfo.error }}
+                </div>
 
-            <div class="space-y-6">
-                <div class="flex flex-col md:flex-row md:items-center justify-between p-4 bg-surface-50 dark:bg-surface-900 rounded-xl border border-surface-100 dark:border-surface-700 gap-4">
-                    <div class="flex items-center gap-4">
-                        <div :class="['w-3 h-3 rounded-full', licenseStatus.is_valid ? 'bg-green-500' : 'bg-red-500']"></div>
-                        <div>
-                            <h4 class="font-medium text-surface-900 dark:text-surface-0 m-0 text-base">Status: {{ licenseStatus.status }}</h4>
-                            <p v-if="licenseStatus.expires_at" class="text-sm text-surface-500 dark:text-surface-400 mt-1 mb-0">
-                                Expires on: {{ new Date(licenseStatus.expires_at).toLocaleDateString() }} 
-                                ({{ Math.floor(licenseStatus.remaining_days) }} days remaining)
-                            </p>
-                            <p v-else class="text-sm text-surface-500 dark:text-surface-400 mt-1 mb-0">
-                                {{ licenseStatus.message }}
-                            </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="p-4 bg-surface-50 dark:bg-surface-900 rounded-lg border border-surface-100 dark:border-surface-700">
+                        <span class="text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider">Licensed To</span>
+                        <div class="text-lg font-bold text-surface-900 dark:text-surface-0 mt-1">{{ licenseInfo.issued_to || 'N/A' }}</div>
+                    </div>
+                    <div class="p-4 bg-surface-50 dark:bg-surface-900 rounded-lg border border-surface-100 dark:border-surface-700">
+                        <span class="text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider">Licensed From</span>
+                        <div class="text-lg font-bold text-surface-900 dark:text-surface-0 mt-1">Klock Technologies</div>
+                    </div>
+                    <div class="p-4 bg-surface-50 dark:bg-surface-900 rounded-lg border border-surface-100 dark:border-surface-700">
+                        <span class="text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider">Expiry Date</span>
+                        <div class="flex items-center gap-2 mt-1">
+                            <div class="text-lg font-bold text-surface-900 dark:text-surface-0">{{ licenseInfo.expires_at ? new Date(licenseInfo.expires_at).toLocaleDateString() : 'N/A' }}</div>
+                            <Tag v-if="licenseInfo.is_valid" value="Active" severity="success" />
+                            <Tag v-else value="Expired" severity="danger" />
+                        </div>
+                    </div>
+                    <div class="p-4 bg-surface-50 dark:bg-surface-900 rounded-lg border border-surface-100 dark:border-surface-700">
+                        <span class="text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider">License ID / Hash</span>
+                        <div class="flex items-center gap-2 mt-1 font-mono text-sm break-all text-surface-700 dark:text-surface-300">
+                            {{ licenseInfo.license_id || 'N/A' }}
                         </div>
                     </div>
                 </div>
 
-                <div class="flex flex-col gap-2">
-                    <label for="update_license" class="text-sm font-medium text-surface-700 dark:text-surface-200">Update License Key</label>
-                    <div class="flex flex-col gap-3">
-                        <Textarea id="update_license" v-model="newLicenseKey" rows="3" placeholder="Paste your new license key here" />
-                        <div class="flex justify-end gap-2">
-                            <Button label="Generate Key (Dev)" severity="secondary" @click="generateDevKey" text />
-                            <Button label="Update License" :loading="updatingLicense" :disabled="!newLicenseKey" @click="updateLicense" />
-                        </div>
-                    </div>
+                <div class="flex flex-wrap gap-2 mt-2">
+                    <Tag v-for="feature in licenseInfo.features" :key="feature" :value="feature === '*' ? 'Full Access' : feature" severity="info" outlined />
                 </div>
+            </div>
+            <div v-else class="text-center py-4 text-surface-500">
+                <i class="pi pi-spin pi-spinner mr-2"></i> Loading license details...
             </div>
         </div>
 
@@ -151,22 +159,14 @@ import InputText from 'primevue/inputtext';
 import Password from 'primevue/password';
 import Toast from 'primevue/toast';
 import Textarea from 'primevue/textarea';
+import Tag from 'primevue/tag';
 import { useToast } from 'primevue/usetoast';
 
 const downloading = ref(false);
 const saving = ref(false);
 const savingCompany = ref(false);
-const updatingLicense = ref(false);
+const licenseInfo = ref(null);
 const toast = useToast();
-
-const licenseStatus = ref({
-    status: 'loading',
-    is_valid: false,
-    message: '',
-    expires_at: null,
-    remaining_days: 0
-});
-const newLicenseKey = ref('');
 
 const settings = ref({
     whatsapp_access_token: '',
@@ -206,7 +206,8 @@ function handleLogoDrop(e) {
 const fetchSettings = async () => {
     try {
         const response = await api.get('/settings');
-        const data = response.data;
+        const data = response.data.settings;        
+        licenseInfo.value = response.data.license;
         
         // WhatsApp settings
         settings.value = {
@@ -232,7 +233,7 @@ const fetchSettings = async () => {
         
         if (companyInfo.value.logo) {
             // Use the backend URL to access the logo
-            logoPreview.value = `http://localhost:8080/storage/${companyInfo.value.logo}`;
+            logoPreview.value = `${import.meta.env.VITE_API_URL.replace('/api', '')}/storage/${companyInfo.value.logo}`;
         }
     } catch (error) {
         console.error('Error fetching settings:', error);
@@ -370,42 +371,7 @@ const downloadBackup = async () => {
     }
 };
 
-const fetchLicenseStatus = async () => {
-    try {
-        const response = await api.get('/license/status');
-        licenseStatus.value = response.data;
-    } catch (error) {
-        console.error('Error fetching license status:', error);
-    }
-};
-
-const updateLicense = async () => {
-    updatingLicense.value = true;
-    try {
-        const response = await api.post('/license/update', { license_key: newLicenseKey.value });
-        toast.add({ severity: 'success', summary: 'Success', detail: 'License updated successfully', life: 3000 });
-        licenseStatus.value = response.data.license;
-        newLicenseKey.value = '';
-    } catch (error) {
-        console.error('Error updating license:', error);
-        toast.add({ severity: 'error', summary: 'Error', detail: error.response?.data?.message || 'Failed to update license', life: 3000 });
-    } finally {
-        updatingLicense.value = false;
-    }
-};
-
-const generateDevKey = async () => {
-    try {
-        const response = await api.post('/license/generate', { years: 2 });
-        newLicenseKey.value = response.data.license_key;
-        toast.add({ severity: 'info', summary: 'Dev Mode', detail: 'Generated a 2-year test key', life: 3000 });
-    } catch (error) {
-        console.error('Error generating dev key:', error);
-    }
-};
-
 onMounted(() => {
     fetchSettings();
-    fetchLicenseStatus();
 });
 </script>
