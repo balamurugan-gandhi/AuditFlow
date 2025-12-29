@@ -172,8 +172,9 @@ class LicenseManager
         $id = $rawId ?: $this->getMachineId();
         if ($id === 'unknown') return 'unknown';
 
-        // Use APP_KEY as a pepper for the hash to make it unique to this app instance
-        $salt = config('app.key');
+        // Use a fixed stable salt specifically for hardware locking
+        // This ensures the license remains valid even if APP_KEY is rotated.
+        $salt = 'AuditFlow_Hardware_Stability_Salt_v1';
         return hash_hmac('sha256', $id, $salt);
     }
 

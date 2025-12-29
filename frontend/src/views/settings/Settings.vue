@@ -114,8 +114,9 @@
                         <div class="flex items-center gap-2 mt-1 font-mono text-sm break-all text-surface-700 dark:text-surface-300">
                             {{ licenseInfo.license_id || 'N/A' }}
                         </div>
-                    </div>
-                    <div class="p-4 bg-surface-50 dark:bg-surface-900 rounded-lg border border-surface-100 dark:border-surface-700">
+                    </div>                    
+                </div>
+                <div class="p-4 bg-surface-50 dark:bg-surface-900 rounded-lg border border-surface-100 dark:border-surface-700">
                         <span class="text-xs font-semibold text-surface-500 dark:text-surface-400 uppercase tracking-wider">Machine Lock</span>
                         <div v-if="licenseInfo.machine_id" class="flex items-center gap-2 mt-1 font-mono text-sm text-surface-700 dark:text-surface-300">
                             <i class="pi pi-lock text-primary-500"></i>
@@ -126,7 +127,6 @@
                             Not hardware locked
                         </div>
                     </div>
-                </div>
 
                 <!-- Current Machine ID for licensing -->
                 <div class="p-4 bg-primary-50/30 dark:bg-primary-500/5 border border-primary-100 dark:border-primary-900/30 rounded-lg flex items-center justify-between gap-4 mt-4">
