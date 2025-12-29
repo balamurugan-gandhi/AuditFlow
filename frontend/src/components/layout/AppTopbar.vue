@@ -63,8 +63,8 @@ const fetchNotifications = async () => {
 
 const fetchCompanySettings = async () => {
     try {
-        const response = await api.get('/settings');
-        companySettings.value = response.data;
+        const response = await api.get('/settings');        
+        companySettings.value = response.data.settings;
     } catch (error) {
         console.error('Error fetching company settings:', error);
     }
